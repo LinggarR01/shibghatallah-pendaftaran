@@ -1,0 +1,222 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+enum PeranPengguna {
+  admin
+  pendaftar
+}
+
+enum StatusPeriode {
+  dibuka
+  ditutup
+}
+
+enum StatusPendaftaran {
+  draft
+  menunggu_verifikasi
+  dikirim
+  sedang_diperiksa
+  perlu_revisi
+  diterima
+  ditolak
+}
+
+enum JenisKelamin {
+  laki_laki
+  perempuan
+}
+
+enum JenisDokumen {
+  foto_santri
+  kartu_keluarga
+  akta_kelahiran
+  ijazah
+  pas_foto
+  rapor
+  ktp_orang_tua
+  ktp
+  lainnya
+}
+
+enum StatusVerifikasiDokumen {
+  menunggu
+  valid
+  tidak_valid
+}
+
+model Pengguna {
+  id       BigInt        @id @default(autoincrement())
+  nama     String        @db.VarChar(100)
+  email    String        @unique @db.VarChar(100)
+  password String        @db.VarChar(255)
+  noHp     String?       @map("no_hp") @db.VarChar(20)
+  peran    PeranPengguna @default(pendaftar)
+
+  dibuatPada     DateTime @default(now()) @map("dibuat_pada") @db.Timestamp(6)
+  diperbaruiPada DateTime @updatedAt @map("diperbarui_pada") @db.Timestamp(6)
+
+  pendaftaran Pendaftaran[]
+
+  @@map("pengguna")
+}
+
+model PeriodePendaftaran {
+  id             BigInt        @id @default(autoincrement())
+  nama           String        @db.VarChar(100)
+  tahunAjaran    String        @map("tahun_ajaran") @db.VarChar(20)
+  tanggalMulai   DateTime      @map("tanggal_mulai") @db.Date
+  tanggalSelesai DateTime      @map("tanggal_selesai") @db.Date
+  status         StatusPeriode @default(dibuka)
+
+  dibuatPada     DateTime @default(now()) @map("dibuat_pada") @db.Timestamp(6)
+  diperbaruiPada DateTime @updatedAt @map("diperbarui_pada") @db.Timestamp(6)
+
+  pendaftaran Pendaftaran[]
+
+  @@map("periode_pendaftaran")
+}
+
+model Pendaftaran {
+  id               BigInt            @id @default(autoincrement())
+  penggunaId       BigInt            @map("pengguna_id")
+  periodeId        BigInt            @map("periode_id")
+  nomorPendaftaran String            @unique @map("nomor_pendaftaran") @db.VarChar(50)
+  status           StatusPendaftaran @default(draft)
+  catatanAdmin     String?           @map("catatan_admin") @db.Text
+  dikirimPada      DateTime?         @map("dikirim_pada") @db.Timestamp(6)
+  diverifikasiPada DateTime?         @map("diverifikasi_pada") @db.Timestamp(6)
+
+  dibuatPada     DateTime @default(now()) @map("dibuat_pada") @db.Timestamp(6)
+  diperbaruiPada DateTime @updatedAt @map("diperbarui_pada") @db.Timestamp(6)
+
+  pengguna Pengguna           @relation(fields: [penggunaId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  periode  PeriodePendaftaran @relation(fields: [periodeId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  profilSantri      ProfilSantri?
+  profilOrangTua    ProfilOrangTua?
+  sekolahSebelumnya SekolahSebelumnya?
+  dokumen           DokumenPendaftaran[]
+
+  @@map("pendaftaran")
+}
+
+model ProfilSantri {
+  id            BigInt @id @default(autoincrement())
+  pendaftaranId BigInt @unique @map("pendaftaran_id")
+
+  namaLengkap String  @map("nama_lengkap") @db.VarChar(100)
+  nisn        String? @db.VarChar(30)
+  nik         String? @db.VarChar(30)
+
+  tempatLahir  String?      @map("tempat_lahir") @db.VarChar(100)
+  tanggalLahir DateTime?    @map("tanggal_lahir") @db.Date
+  jenisKelamin JenisKelamin @map("jenis_kelamin")
+
+  alamat          String? @db.Text
+  desa            String? @db.VarChar(100)
+  kecamatan       String? @db.VarChar(100)
+  kota            String? @db.VarChar(100)
+  provinsi        String? @db.VarChar(100)
+  kodePos         String? @map("kode_pos") @db.VarChar(10)
+  noHp            String? @map("no_hp") @db.VarChar(20)
+  anakKe          Int?    @map("anak_ke")
+  jumlahSaudara   Int?    @map("jumlah_saudara")
+  riwayatPenyakit String? @map("riwayat_penyakit") @db.Text
+
+  sekolahAsal   String? @map("sekolah_asal") @db.VarChar(150)
+  jenjangTujuan String? @map("jenjang_tujuan") @db.VarChar(50)
+
+  dibuatPada     DateTime @default(now()) @map("dibuat_pada") @db.Timestamp(6)
+  diperbaruiPada DateTime @updatedAt @map("diperbarui_pada") @db.Timestamp(6)
+
+  pendaftaran Pendaftaran @relation(fields: [pendaftaranId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("profil_santri")
+}
+
+model ProfilOrangTua {
+  id            BigInt @id @default(autoincrement())
+  pendaftaranId BigInt @unique @map("pendaftaran_id")
+
+  namaAyah        String? @map("nama_ayah") @db.VarChar(100)
+  nikAyah         String? @map("nik_ayah") @db.VarChar(30)
+  pekerjaanAyah   String? @map("pekerjaan_ayah") @db.VarChar(100)
+  noHpAyah        String? @map("no_hp_ayah") @db.VarChar(20)
+  pendidikanAyah  String? @map("pendidikan_ayah") @db.VarChar(50)
+  penghasilanAyah String? @map("penghasilan_ayah") @db.VarChar(100)
+
+  namaIbu        String? @map("nama_ibu") @db.VarChar(100)
+  nikIbu         String? @map("nik_ibu") @db.VarChar(30)
+  pekerjaanIbu   String? @map("pekerjaan_ibu") @db.VarChar(100)
+  noHpIbu        String? @map("no_hp_ibu") @db.VarChar(20)
+  pendidikanIbu  String? @map("pendidikan_ibu") @db.VarChar(50)
+  penghasilanIbu String? @map("penghasilan_ibu") @db.VarChar(100)
+
+  namaWali       String? @map("nama_wali") @db.VarChar(100)
+  nikWali        String? @map("nik_wali") @db.VarChar(30)
+  hubunganWali   String? @map("hubungan_wali") @db.VarChar(50)
+  pekerjaanWali  String? @map("pekerjaan_wali") @db.VarChar(100)
+  noHpWali       String? @map("no_hp_wali") @db.VarChar(20)
+  pendidikanWali String? @map("pendidikan_wali") @db.VarChar(50)
+  alamatWali     String? @map("alamat_wali") @db.Text
+
+  alamatOrangTua String? @map("alamat_orang_tua") @db.Text
+
+  dibuatPada     DateTime @default(now()) @map("dibuat_pada") @db.Timestamp(6)
+  diperbaruiPada DateTime @updatedAt @map("diperbarui_pada") @db.Timestamp(6)
+
+  pendaftaran Pendaftaran @relation(fields: [pendaftaranId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("profil_orang_tua")
+}
+
+model SekolahSebelumnya {
+  id            BigInt @id @default(autoincrement())
+  pendaftaranId BigInt @unique @map("pendaftaran_id")
+
+  namaSekolah   String  @map("nama_sekolah") @db.VarChar(150)
+  npsn          String? @db.VarChar(30)
+  alamatSekolah String? @map("alamat_sekolah") @db.Text
+  tahunLulus    String? @map("tahun_lulus") @db.VarChar(10)
+  nomorIjazah   String? @map("nomor_ijazah") @db.VarChar(100)
+
+  dibuatPada     DateTime @default(now()) @map("dibuat_pada") @db.Timestamp(6)
+  diperbaruiPada DateTime @updatedAt @map("diperbarui_pada") @db.Timestamp(6)
+
+  pendaftaran Pendaftaran @relation(fields: [pendaftaranId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("sekolah_sebelumnya")
+}
+
+model DokumenPendaftaran {
+  id            BigInt @id @default(autoincrement())
+  pendaftaranId BigInt @map("pendaftaran_id")
+
+  jenisDokumen JenisDokumen @map("jenis_dokumen")
+
+  namaFile   String  @map("nama_file") @db.VarChar(255)
+  lokasiFile String  @map("lokasi_file") @db.VarChar(255)
+  tipeFile   String? @map("tipe_file") @db.VarChar(50)
+  ukuranFile BigInt? @map("ukuran_file")
+
+  statusVerifikasi StatusVerifikasiDokumen @default(menunggu) @map("status_verifikasi")
+  catatanAdmin     String?                 @map("catatan_admin") @db.Text
+
+  diunggahPada   DateTime @default(now()) @map("diunggah_pada") @db.Timestamp(6)
+  dibuatPada     DateTime @default(now()) @map("dibuat_pada") @db.Timestamp(6)
+  diperbaruiPada DateTime @updatedAt @map("diperbarui_pada") @db.Timestamp(6)
+
+  pendaftaran Pendaftaran @relation(fields: [pendaftaranId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("dokumen_pendaftaran")
+}
