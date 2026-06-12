@@ -1,7 +1,10 @@
 import Link from 'next/link';
-import { StatusPendaftaran } from '@prisma/client';
 import StatusBadge from '@/app/components/ui/StatusBadge';
 import { prisma } from '@/lib/prisma';
+import {
+  registrationStatuses,
+  type StatusPendaftaran,
+} from '@/lib/registration';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,9 +30,7 @@ export default async function AdminPendaftarPage({
   const statusParam = getSearchParam(resolvedSearchParams, 'status') ?? '';
   const pageParam = Number(getSearchParam(resolvedSearchParams, 'page') ?? '1');
   const page = Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1;
-  const status = Object.values(StatusPendaftaran).includes(
-    statusParam as StatusPendaftaran,
-  )
+  const status = registrationStatuses.includes(statusParam as StatusPendaftaran)
     ? (statusParam as StatusPendaftaran)
     : undefined;
 

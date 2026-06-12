@@ -1,4 +1,4 @@
-import type { StatusPendaftaran } from '@prisma/client';
+import type { StatusPendaftaran } from '@/lib/registration';
 
 const statusStyles: Record<StatusPendaftaran, string> = {
   draft: 'bg-slate-100 text-slate-700 ring-slate-200',

@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import type { StatusPendaftaran } from '@prisma/client';
+import type { StatusPendaftaran } from '@/lib/registration';
 
 export type PendaftaranSearchFilters = {
   search?: string;

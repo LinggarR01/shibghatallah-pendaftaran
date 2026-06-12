@@ -1,6 +1,9 @@
 import { NextRequest } from 'next/server';
-import { StatusPendaftaran } from '@prisma/client';
 import { jsonResponse } from '@/lib/api-response';
+import {
+  registrationStatuses,
+  type StatusPendaftaran,
+} from '@/lib/registration';
 import { getAuthUser } from '@/lib/utils';
 import { getPendaftaranListForAdmin } from '@/lib/services/pendaftaran';
 
@@ -35,7 +38,7 @@ export async function GET(request: NextRequest) {
 
     let status: StatusPendaftaran | undefined;
     if (statusParam) {
-      const isValidStatus = Object.values(StatusPendaftaran).includes(
+      const isValidStatus = registrationStatuses.includes(
         statusParam as StatusPendaftaran,
       );
 

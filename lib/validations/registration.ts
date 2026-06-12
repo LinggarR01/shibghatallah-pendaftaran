@@ -1,5 +1,6 @@
-import { JenisKelamin } from '@prisma/client';
 import { z } from 'zod';
+
+const genderTypes = ['laki_laki', 'perempuan'] as const;
 
 const optionalText = (max = 255) =>
   z
@@ -29,7 +30,7 @@ export const registrationDraftSchema = z.object({
     nik: optionalText(30),
     nisn: optionalText(30),
     gender: z
-      .enum(JenisKelamin)
+      .enum(genderTypes)
       .optional()
       .nullable()
       .transform((value) => value ?? null),

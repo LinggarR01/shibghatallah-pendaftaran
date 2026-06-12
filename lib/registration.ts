@@ -1,6 +1,17 @@
-import type { Pendaftaran } from '@prisma/client';
+export const registrationStatuses = [
+  'draft',
+  'menunggu_verifikasi',
+  'dikirim',
+  'sedang_diperiksa',
+  'perlu_revisi',
+  'diterima',
+  'ditolak',
+] as const;
 
-type RegistrationWithParts = Pick<Pendaftaran, 'status'> & {
+export type StatusPendaftaran = (typeof registrationStatuses)[number];
+
+type RegistrationWithParts = {
+  status: StatusPendaftaran;
   profilSantri?: unknown;
   profilOrangTua?: unknown;
   sekolahSebelumnya?: unknown;
@@ -8,7 +19,7 @@ type RegistrationWithParts = Pick<Pendaftaran, 'status'> & {
 
 export const editableRegistrationStatuses = ['draft', 'perlu_revisi'] as const;
 
-export function canEditRegistration(status: Pendaftaran['status']) {
+export function canEditRegistration(status: StatusPendaftaran) {
   return editableRegistrationStatuses.includes(
     status as (typeof editableRegistrationStatuses)[number],
   );
