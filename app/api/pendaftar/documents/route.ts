@@ -17,6 +17,10 @@ import { getAuthUser } from '@/lib/utils';
 
 export const runtime = 'nodejs';
 
+type ExistingDocumentFile = {
+  lokasiFile: string;
+};
+
 async function getCurrentRegistration(penggunaId: bigint) {
   return prisma.pendaftaran.findFirst({
     where: { penggunaId },
@@ -192,12 +196,12 @@ export async function POST(request: NextRequest) {
 
     await writeFile(absolutePath, buffer);
 
-    const existingDocuments = await prisma.dokumenPendaftaran.findMany({
+    const existingDocuments = (await prisma.dokumenPendaftaran.findMany({
       where: {
         pendaftaranId: registration.id,
         jenisDokumen: documentType as JenisDokumen,
       },
-    });
+    })) as ExistingDocumentFile[];
 
     await prisma.$transaction([
       prisma.dokumenPendaftaran.deleteMany({
@@ -219,7 +223,9 @@ export async function POST(request: NextRequest) {
     ]);
 
     await Promise.all(
-      existingDocuments.map((document) => removeStoredFile(document.lokasiFile)),
+      existingDocuments.map((document: ExistingDocumentFile) =>
+        removeStoredFile(document.lokasiFile),
+      ),
     );
 
     return jsonResponse({

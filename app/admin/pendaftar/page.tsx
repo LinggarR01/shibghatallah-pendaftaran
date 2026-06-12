@@ -131,7 +131,7 @@ export default async function AdminPendaftarPage({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {registrations.map((item) => (
+              {registrations.map((item: AdminRegistrationRow) => (
                 <tr key={item.id.toString()}>
                   <td className="px-5 py-4 font-semibold text-slate-900">
                     {item.nomorPendaftaran}

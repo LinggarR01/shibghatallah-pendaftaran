@@ -61,7 +61,7 @@ export default function DashboardShell({
           </span>
         </div>
         <nav className="flex gap-2 overflow-x-auto px-4 pb-3">
-          {navItems.map((item) => (
+          {navItems.map((item: NavItem) => (
             <Link
               key={item.href}
               href={item.href}
@@ -103,7 +103,7 @@ export default function DashboardShell({
             </div>
 
             <nav className="mt-6 space-y-1">
-              {navItems.map((item) => (
+              {navItems.map((item: NavItem) => (
                 <Link
                   key={item.href}
                   href={item.href}

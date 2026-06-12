@@ -9,6 +9,11 @@ import {
   registrationDraftSchema,
   validateRegistrationForSubmit,
 } from '@/lib/validations/registration';
+import type { JenisDokumen } from '@/lib/documents';
+
+type UploadedDocumentType = {
+  jenisDokumen: JenisDokumen;
+};
 
 export async function POST(request: NextRequest) {
   try {
@@ -90,12 +95,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const uploadedDocuments = await prisma.dokumenPendaftaran.findMany({
+    const uploadedDocuments = (await prisma.dokumenPendaftaran.findMany({
       where: { pendaftaranId: registration.id },
       select: { jenisDokumen: true },
-    });
+    })) as UploadedDocumentType[];
     const uploadedTypes = new Set(
-      uploadedDocuments.map((document) => document.jenisDokumen),
+      uploadedDocuments.map(
+        (document: UploadedDocumentType) => document.jenisDokumen,
+      ),
     );
     const missingRequiredDocument = documentDefinitions.find(
       (definition) => definition.required && !uploadedTypes.has(definition.type),

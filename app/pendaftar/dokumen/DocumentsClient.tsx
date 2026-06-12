@@ -45,7 +45,7 @@ export default function DocumentsClient() {
 
   const documentsByType = useMemo(() => {
     const map = new Map<string, UploadedDocument>();
-    data?.documents.forEach((document) => {
+    data?.documents.forEach((document: UploadedDocument) => {
       map.set(document.jenisDokumen, document);
     });
     return map;
@@ -210,7 +210,7 @@ export default function DocumentsClient() {
       </section>
 
       <section className="grid gap-4">
-        {data?.definitions.map((definition) => {
+        {data?.definitions.map((definition: DocumentDefinition) => {
           const document = documentsByType.get(definition.type);
           const isBusy =
             busyType === definition.type || busyType === document?.id?.toString();

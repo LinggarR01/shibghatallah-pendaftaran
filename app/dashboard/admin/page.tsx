@@ -4,8 +4,26 @@ import { ArrowRight, ClipboardList, UsersRound } from 'lucide-react';
 import StatusBadge from '@/app/components/ui/StatusBadge';
 import { getAuthUser } from '@/lib/utils';
 import { prisma } from '@/lib/prisma';
+import type { StatusPendaftaran } from '@/lib/registration';
 
 export const dynamic = 'force-dynamic';
+
+type DashboardStat = [label: string, value: number];
+
+type RecentRegistration = {
+  id: bigint;
+  nomorPendaftaran: string;
+  status: StatusPendaftaran;
+  pengguna: {
+    nama: string;
+    email: string;
+    noHp: string | null;
+  };
+  profilSantri: {
+    namaLengkap: string;
+    nik: string | null;
+  } | null;
+};
 
 async function getAdminDashboardData() {
   const [
@@ -32,7 +50,7 @@ async function getAdminDashboardData() {
         pengguna: { select: { nama: true, email: true, noHp: true } },
         profilSantri: { select: { namaLengkap: true, nik: true } },
       },
-    }),
+    }) as Promise<RecentRegistration[]>,
   ]);
 
   return {
@@ -58,7 +76,7 @@ export default async function AdminDashboardPage() {
   }
 
   const data = await getAdminDashboardData();
-  const stats = [
+  const stats: DashboardStat[] = [
     ['Total Pendaftar', data.totalPendaftar],
     ['DRAFT', data.totalDraft],
     ['MENUNGGU VERIFIKASI', data.totalMenungguVerifikasi],
@@ -92,7 +110,7 @@ export default async function AdminDashboardPage() {
       </section>
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {stats.map(([label, value]) => (
+        {stats.map(([label, value]: DashboardStat) => (
           <div
             key={label}
             className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
@@ -134,7 +152,7 @@ export default async function AdminDashboardPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {data.pendaftarTerbaru.map((item) => (
+                {data.pendaftarTerbaru.map((item: RecentRegistration) => (
                   <tr key={item.id.toString()}>
                     <td className="px-5 py-4 font-semibold text-slate-900">
                       {item.nomorPendaftaran}
