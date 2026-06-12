@@ -14,6 +14,24 @@ type AdminPendaftarPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
+type AdminRegistrationRow = {
+  id: bigint;
+  nomorPendaftaran: string;
+  status: StatusPendaftaran;
+  pengguna: {
+    nama: string;
+    email: string;
+    noHp: string | null;
+  };
+  profilSantri: {
+    namaLengkap: string;
+    nik: string | null;
+  } | null;
+  sekolahSebelumnya: {
+    namaSekolah: string;
+  } | null;
+};
+
 function getSearchParam(
   searchParams: Record<string, string | string[] | undefined>,
   key: string,
@@ -61,7 +79,7 @@ export default async function AdminPendaftarPage({
         profilSantri: { select: { namaLengkap: true, nik: true } },
         sekolahSebelumnya: { select: { namaSekolah: true } },
       },
-    }),
+    }) as Promise<AdminRegistrationRow[]>,
     prisma.pendaftaran.count({ where }),
   ]);
   const pageCount = Math.max(1, Math.ceil(total / pageSize));
