@@ -1,21 +1,20 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import StatusBadge from '@/app/components/ui/StatusBadge';
-import { getDocumentLabel } from '@/lib/documents';
+import { getDocumentLabel, type JenisDokumen } from '@/lib/documents';
 import { prisma } from '@/lib/prisma';
 import StatusUpdateForm from './StatusUpdateForm';
-import { JenisDokumen } from '@prisma/client';
 
 export const dynamic = 'force-dynamic';
+
+type AdminPendaftarDetailPageProps = {
+  params: Promise<{ id: string }>;
+};
 
 type RegistrationDocument = {
   id: bigint;
   jenisDokumen: JenisDokumen;
   namaFile: string;
-};
-
-type AdminPendaftarDetailPageProps = {
-  params: Promise<{ id: string }>;
 };
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {

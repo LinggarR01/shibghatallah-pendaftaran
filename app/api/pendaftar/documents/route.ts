@@ -1,13 +1,14 @@
 import path from 'node:path';
 import { mkdir, unlink, writeFile } from 'node:fs/promises';
 import { NextRequest } from 'next/server';
-import { JenisDokumen } from '@prisma/client';
 import { jsonResponse } from '@/lib/api-response';
 import {
   createSafeDocumentFileName,
   documentDefinitions,
   documentStorageRoot,
+  documentTypes,
   isAllowedDocumentMimeType,
+  type JenisDokumen,
   MAX_DOCUMENT_SIZE,
 } from '@/lib/documents';
 import { prisma } from '@/lib/prisma';
@@ -146,7 +147,7 @@ export async function POST(request: NextRequest) {
 
     if (
       typeof documentType !== 'string' ||
-      !Object.values(JenisDokumen).includes(documentType as JenisDokumen)
+      !documentTypes.includes(documentType as JenisDokumen)
     ) {
       return jsonResponse(
         { success: false, message: 'Jenis dokumen tidak valid' },

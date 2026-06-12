@@ -1,8 +1,21 @@
 import crypto from 'node:crypto';
 import path from 'node:path';
-import type { JenisDokumen } from '@prisma/client';
 
 export const MAX_DOCUMENT_SIZE = 5 * 1024 * 1024;
+
+export const documentTypes = [
+  'foto_santri',
+  'kartu_keluarga',
+  'akta_kelahiran',
+  'ijazah',
+  'pas_foto',
+  'rapor',
+  'ktp_orang_tua',
+  'ktp',
+  'lainnya',
+] as const;
+
+export type JenisDokumen = (typeof documentTypes)[number];
 
 export const allowedDocumentMimeTypes = [
   'application/pdf',

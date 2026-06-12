@@ -1,7 +1,7 @@
-import { JenisDokumen } from '@prisma/client';
 import { z } from 'zod';
+import { documentTypes } from '@/lib/documents';
 
-export const documentTypeSchema = z.enum(JenisDokumen);
+export const documentTypeSchema = z.enum(documentTypes);
 
 export const updateRegistrationStatusSchema = z.object({
   status: z.enum([
