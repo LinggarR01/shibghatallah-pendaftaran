@@ -4,8 +4,15 @@ import StatusBadge from '@/app/components/ui/StatusBadge';
 import { getDocumentLabel } from '@/lib/documents';
 import { prisma } from '@/lib/prisma';
 import StatusUpdateForm from './StatusUpdateForm';
+import { JenisDokumen } from '@prisma/client';
 
 export const dynamic = 'force-dynamic';
+
+type RegistrationDocument = {
+  id: bigint;
+  jenisDokumen: JenisDokumen;
+  namaFile: string;
+};
 
 type AdminPendaftarDetailPageProps = {
   params: Promise<{ id: string }>;
@@ -42,7 +49,9 @@ export default async function AdminPendaftarDetailPage({
   const registration = await prisma.pendaftaran.findUnique({
     where: { id: BigInt(id) },
     include: {
-      pengguna: { select: { nama: true, email: true, noHp: true, peran: true } },
+      pengguna: {
+        select: { nama: true, email: true, noHp: true, peran: true },
+      },
       profilSantri: true,
       profilOrangTua: true,
       sekolahSebelumnya: true,
@@ -84,17 +93,38 @@ export default async function AdminPendaftarDetailPage({
       </Section>
 
       <Section title="Data Santri">
-        <Row label="Nama lengkap" value={registration.profilSantri?.namaLengkap} />
+        <Row
+          label="Nama lengkap"
+          value={registration.profilSantri?.namaLengkap}
+        />
         <Row label="NIK" value={registration.profilSantri?.nik} />
         <Row label="NISN" value={registration.profilSantri?.nisn} />
-        <Row label="Jenis kelamin" value={registration.profilSantri?.jenisKelamin} />
-        <Row label="Tempat lahir" value={registration.profilSantri?.tempatLahir} />
+        <Row
+          label="Jenis kelamin"
+          value={registration.profilSantri?.jenisKelamin}
+        />
+        <Row
+          label="Tempat lahir"
+          value={registration.profilSantri?.tempatLahir}
+        />
         <Row
           label="Tanggal lahir"
-          value={registration.profilSantri?.tanggalLahir?.toLocaleDateString('id-ID')}
+          value={registration.profilSantri?.tanggalLahir?.toLocaleDateString(
+            'id-ID',
+          )}
         />
         <Row label="Alamat" value={registration.profilSantri?.alamat} />
-        <Row label="Wilayah" value={[registration.profilSantri?.desa, registration.profilSantri?.kecamatan, registration.profilSantri?.kota, registration.profilSantri?.provinsi].filter(Boolean).join(', ')} />
+        <Row
+          label="Wilayah"
+          value={[
+            registration.profilSantri?.desa,
+            registration.profilSantri?.kecamatan,
+            registration.profilSantri?.kota,
+            registration.profilSantri?.provinsi,
+          ]
+            .filter(Boolean)
+            .join(', ')}
+        />
       </Section>
 
       <Section title="Data Orang Tua/Wali">
@@ -107,11 +137,23 @@ export default async function AdminPendaftarDetailPage({
       </Section>
 
       <Section title="Pendidikan Sebelumnya">
-        <Row label="Asal sekolah" value={registration.sekolahSebelumnya?.namaSekolah} />
+        <Row
+          label="Asal sekolah"
+          value={registration.sekolahSebelumnya?.namaSekolah}
+        />
         <Row label="NPSN" value={registration.sekolahSebelumnya?.npsn} />
-        <Row label="Tahun lulus" value={registration.sekolahSebelumnya?.tahunLulus} />
-        <Row label="Nomor ijazah" value={registration.sekolahSebelumnya?.nomorIjazah} />
-        <Row label="Alamat sekolah" value={registration.sekolahSebelumnya?.alamatSekolah} />
+        <Row
+          label="Tahun lulus"
+          value={registration.sekolahSebelumnya?.tahunLulus}
+        />
+        <Row
+          label="Nomor ijazah"
+          value={registration.sekolahSebelumnya?.nomorIjazah}
+        />
+        <Row
+          label="Alamat sekolah"
+          value={registration.sekolahSebelumnya?.alamatSekolah}
+        />
       </Section>
 
       <section className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
@@ -120,7 +162,7 @@ export default async function AdminPendaftarDetailPage({
           <p className="mt-4 text-sm text-slate-600">Belum ada dokumen.</p>
         ) : (
           <div className="mt-4 grid gap-3">
-            {registration.dokumen.map((document) => (
+            {registration.dokumen.map((document: RegistrationDocument) => (
               <div
                 key={document.id.toString()}
                 className="flex flex-col gap-3 rounded-md border border-slate-200 p-4 sm:flex-row sm:items-center sm:justify-between">
