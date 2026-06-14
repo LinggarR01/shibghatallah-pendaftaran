@@ -1,7 +1,18 @@
 'use client';
 
 import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from 'react';
-import { AlertCircle, CheckCircle2, Save, Send } from 'lucide-react';
+import { Save, Send } from 'lucide-react';
+import { Alert } from '@/app/components/ui/Alert';
+import { Button } from '@/app/components/ui/Button';
+import { Card, CardContent } from '@/app/components/ui/Card';
+import { FormSection } from '@/app/components/ui/FormSection';
+import { Input as UiInput } from '@/app/components/ui/Input';
+import { Label } from '@/app/components/ui/Label';
+import { PageHeader } from '@/app/components/ui/PageHeader';
+import { Select as UiSelect } from '@/app/components/ui/Select';
+import { Skeleton } from '@/app/components/ui/Skeleton';
+import { Textarea as UiTextarea } from '@/app/components/ui/Textarea';
+import { cn } from '@/lib/cn';
 
 type FormState = {
   fullName: string;
@@ -271,63 +282,58 @@ export default function RegistrationFormClient() {
 
   if (loading) {
     return (
-      <div className="rounded-md border border-slate-200 bg-white p-6 text-sm text-slate-600 shadow-sm">
-        Memuat formulir...
-      </div>
+      <Card>
+        <CardContent>
+          <Skeleton className="h-5 w-44" />
+          <Skeleton className="mt-4 h-8 w-72 max-w-full" />
+          <div className="mt-6 grid gap-4 md:grid-cols-2">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <Skeleton key={index} className="h-11" />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
     <form onSubmit={handleSaveDraft} className="space-y-6">
-      <section className="rounded-md border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-        <p className="text-sm font-semibold uppercase tracking-wider text-emerald-700">
-          Formulir Pendaftaran
-        </p>
-        <h1 className="mt-2 text-2xl font-bold text-slate-950">
-          Data Santri dan Wali
-        </h1>
-        <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-          Simpan draft kapan saja. Submit hanya akan berhasil jika field wajib
-          sudah lengkap.
-        </p>
+      <PageHeader
+        eyebrow="Formulir Pendaftaran"
+        title="Data Santri dan Wali"
+        description="Simpan draft kapan saja. Submit hanya akan berhasil jika field wajib sudah lengkap."
+      />
 
-        {readonly && (
-          <div className="mt-4 flex gap-3 rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-            <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
-            Data tidak bisa diedit karena status pendaftaran sudah terkunci.
-          </div>
-        )}
-        {message && (
-          <div className="mt-4 flex gap-3 rounded-md border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
-            <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0" />
-            {message}
-          </div>
-        )}
-        {error && (
-          <div className="mt-4 flex gap-3 rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-            <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
-            {error}
-          </div>
-        )}
-      </section>
+      {readonly && (
+        <Alert variant="warning">
+          Data tidak bisa diedit karena status pendaftaran sudah terkunci.
+        </Alert>
+      )}
+      {message && <Alert variant="success">{message}</Alert>}
+      {error && <Alert variant="destructive">{error}</Alert>}
 
-      <FormSection title="Data Santri">
+      <FormSection title="Data Calon Santri">
         <Input label="Nama lengkap *" name="fullName" value={form.fullName} onChange={handleChange} disabled={readonly} />
         <Input label="NIK *" name="nik" value={form.nik} onChange={handleChange} disabled={readonly} maxLength={16} />
         <Input label="NISN" name="nisn" value={form.nisn} onChange={handleChange} disabled={readonly} />
         <Select label="Jenis kelamin *" name="gender" value={form.gender} onChange={handleChange} disabled={readonly} options={[['', 'Pilih'], ['laki_laki', 'Laki-laki'], ['perempuan', 'Perempuan']]} />
         <Input label="Tempat lahir *" name="birthPlace" value={form.birthPlace} onChange={handleChange} disabled={readonly} />
         <Input label="Tanggal lahir *" name="birthDate" type="date" value={form.birthDate} onChange={handleChange} disabled={readonly} />
+        <Input label="Nomor HP santri" name="phone" value={form.phone} onChange={handleChange} disabled={readonly} />
+        <Input label="Anak ke-" name="childOrder" type="number" value={form.childOrder} onChange={handleChange} disabled={readonly} />
+        <Input label="Jumlah saudara" name="siblingCount" type="number" value={form.siblingCount} onChange={handleChange} disabled={readonly} />
+        <Textarea label="Riwayat penyakit" name="medicalHistory" value={form.medicalHistory} onChange={handleChange} disabled={readonly} className="md:col-span-2" />
+      </FormSection>
+
+      <FormSection
+        title="Alamat Domisili"
+        description="Isi alamat tempat tinggal calon santri secara lengkap.">
         <Textarea label="Alamat lengkap *" name="address" value={form.address} onChange={handleChange} disabled={readonly} className="md:col-span-2" />
         <Input label="Provinsi" name="province" value={form.province} onChange={handleChange} disabled={readonly} />
         <Input label="Kabupaten/Kota" name="city" value={form.city} onChange={handleChange} disabled={readonly} />
         <Input label="Kecamatan" name="district" value={form.district} onChange={handleChange} disabled={readonly} />
         <Input label="Kelurahan/Desa" name="village" value={form.village} onChange={handleChange} disabled={readonly} />
         <Input label="Kode pos" name="postalCode" value={form.postalCode} onChange={handleChange} disabled={readonly} />
-        <Input label="Nomor HP santri" name="phone" value={form.phone} onChange={handleChange} disabled={readonly} />
-        <Input label="Anak ke-" name="childOrder" type="number" value={form.childOrder} onChange={handleChange} disabled={readonly} />
-        <Input label="Jumlah saudara" name="siblingCount" type="number" value={form.siblingCount} onChange={handleChange} disabled={readonly} />
-        <Textarea label="Riwayat penyakit" name="medicalHistory" value={form.medicalHistory} onChange={handleChange} disabled={readonly} className="md:col-span-2" />
       </FormSection>
 
       <FormSection title="Data Orang Tua/Wali">
@@ -358,39 +364,22 @@ export default function RegistrationFormClient() {
         <Input label="Nomor ijazah" name="certificateNumber" value={form.certificateNumber} onChange={handleChange} disabled={readonly} />
       </FormSection>
 
-      <div className="flex flex-col gap-3 rounded-md border border-slate-200 bg-white p-5 shadow-sm sm:flex-row sm:justify-end">
-        <button
-          type="submit"
-          disabled={readonly || saving}
-          className="inline-flex items-center justify-center gap-2 rounded-md border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60">
-          <Save className="h-4 w-4" />
-          {saving ? 'Menyimpan...' : 'Simpan Draft'}
-        </button>
-        <button
-          type="button"
-          onClick={handleSubmitRegistration}
-          disabled={readonly || saving}
-          className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60">
-          <Send className="h-4 w-4" />
-          Submit Pendaftaran
-        </button>
-      </div>
+      <Card className="sticky bottom-4 z-20">
+        <CardContent className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+          <Button type="submit" disabled={readonly || saving} variant="outline">
+            <Save className="h-4 w-4" />
+            {saving ? 'Menyimpan...' : 'Simpan Draft'}
+          </Button>
+          <Button
+            type="button"
+            onClick={handleSubmitRegistration}
+            disabled={readonly || saving}>
+            <Send className="h-4 w-4" />
+            Submit Pendaftaran
+          </Button>
+        </CardContent>
+      </Card>
     </form>
-  );
-}
-
-function FormSection({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="rounded-md border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-      <h2 className="text-lg font-bold text-slate-950">{title}</h2>
-      <div className="mt-5 grid gap-4 md:grid-cols-2">{children}</div>
-    </section>
   );
 }
 
@@ -414,20 +403,19 @@ function Input({
   maxLength,
 }: FieldProps & { type?: string; maxLength?: number }) {
   return (
-    <label className={className}>
-      <span className="mb-2 block text-sm font-semibold text-slate-700">
+    <Label className={cn('block', className)}>
+      <span className="mb-2 block">
         {label}
       </span>
-      <input
+      <UiInput
         name={name}
         value={value}
         onChange={onChange}
         disabled={disabled}
         type={type}
         maxLength={maxLength}
-        className="w-full rounded-md border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-emerald-600 focus:ring-4 focus:ring-emerald-600/10 disabled:bg-slate-100 disabled:text-slate-500"
       />
-    </label>
+    </Label>
   );
 }
 
@@ -440,19 +428,18 @@ function Textarea({
   className,
 }: FieldProps) {
   return (
-    <label className={className}>
-      <span className="mb-2 block text-sm font-semibold text-slate-700">
+    <Label className={cn('block', className)}>
+      <span className="mb-2 block">
         {label}
       </span>
-      <textarea
+      <UiTextarea
         name={name}
         value={value}
         onChange={onChange}
         disabled={disabled}
         rows={4}
-        className="w-full resize-none rounded-md border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-emerald-600 focus:ring-4 focus:ring-emerald-600/10 disabled:bg-slate-100 disabled:text-slate-500"
       />
-    </label>
+    </Label>
   );
 }
 
@@ -465,22 +452,21 @@ function Select({
   options,
 }: FieldProps & { options: Array<[string, string]> }) {
   return (
-    <label>
-      <span className="mb-2 block text-sm font-semibold text-slate-700">
+    <Label className="block">
+      <span className="mb-2 block">
         {label}
       </span>
-      <select
+      <UiSelect
         name={name}
         value={value}
         onChange={onChange}
-        disabled={disabled}
-        className="w-full rounded-md border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-emerald-600 focus:ring-4 focus:ring-emerald-600/10 disabled:bg-slate-100 disabled:text-slate-500">
+        disabled={disabled}>
         {options.map(([optionValue, labelText]) => (
           <option key={optionValue} value={optionValue}>
             {labelText}
           </option>
         ))}
-      </select>
-    </label>
+      </UiSelect>
+    </Label>
   );
 }

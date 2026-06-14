@@ -1,14 +1,39 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { ArrowRight, ClipboardList, UsersRound } from 'lucide-react';
+import {
+  AlertTriangle,
+  ArrowRight,
+  ClipboardList,
+  ShieldCheck,
+  UserCheck,
+  UserX,
+  UsersRound,
+} from 'lucide-react';
 import StatusBadge from '@/app/components/ui/StatusBadge';
 import { getAuthUser } from '@/lib/utils';
 import { prisma } from '@/lib/prisma';
 import type { StatusPendaftaran } from '@/lib/registration';
+import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/Card';
+import { EmptyState } from '@/app/components/ui/EmptyState';
+import { PageHeader } from '@/app/components/ui/PageHeader';
+import { StatCard } from '@/app/components/ui/StatCard';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/app/components/ui/Table';
 
 export const dynamic = 'force-dynamic';
 
-type DashboardStat = [label: string, value: number];
+type DashboardStat = {
+  label: string;
+  value: number;
+  icon: typeof UsersRound;
+  tone: 'green' | 'gold' | 'red' | 'muted';
+};
 
 type RecentRegistration = {
   id: bigint;
@@ -77,107 +102,168 @@ export default async function AdminDashboardPage() {
 
   const data = await getAdminDashboardData();
   const stats: DashboardStat[] = [
-    ['Total Pendaftar', data.totalPendaftar],
-    ['DRAFT', data.totalDraft],
-    ['MENUNGGU VERIFIKASI', data.totalMenungguVerifikasi],
-    ['PERLU REVISI', data.totalPerluRevisi],
-    ['DITERIMA', data.totalDiterima],
-    ['DITOLAK', data.totalDitolak],
+    { label: 'Total Pendaftar', value: data.totalPendaftar, icon: UsersRound, tone: 'green' },
+    {
+      label: 'Menunggu Verifikasi',
+      value: data.totalMenungguVerifikasi,
+      icon: ShieldCheck,
+      tone: 'gold',
+    },
+    { label: 'Diterima', value: data.totalDiterima, icon: UserCheck, tone: 'green' },
+    { label: 'Ditolak', value: data.totalDitolak, icon: UserX, tone: 'red' },
   ];
 
   return (
     <div className="space-y-6">
-      <section className="rounded-md border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-wider text-emerald-700">
-              Dashboard Admin
-            </p>
-            <h1 className="mt-2 text-2xl font-bold text-slate-950 sm:text-3xl">
-              Ringkasan Pendaftaran Santri
-            </h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-              Pantau status pendaftaran dan data terbaru yang masuk ke sistem.
-            </p>
-          </div>
+      <PageHeader
+        eyebrow="Dashboard Admin"
+        title="Ringkasan Pendaftaran Santri"
+        description="Pantau status pendaftaran dan data terbaru yang masuk ke sistem."
+        actions={
           <Link
             href="/admin/pendaftar"
-            className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700">
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-hover">
             Data Pendaftar
             <ArrowRight className="h-4 w-4" />
           </Link>
+        }
+      />
+
+      <section className="grid gap-4 xl:grid-cols-[1.35fr_0.65fr]">
+        <div className="grid gap-4 sm:grid-cols-2">
+          {stats.map((item) => (
+            <StatCard
+              key={item.label}
+              label={item.label}
+              value={item.value}
+              icon={item.icon}
+              tone={item.tone}
+            />
+          ))}
         </div>
+
+        <Card className="overflow-hidden">
+          <CardContent>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold text-text-muted">
+                  Prioritas Verifikasi
+                </p>
+                <p className="mt-3 text-4xl font-bold tracking-tight text-text-main">
+                  {data.totalMenungguVerifikasi + data.totalPerluRevisi}
+                </p>
+              </div>
+              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50 text-[#8a6507]">
+                <AlertTriangle className="h-6 w-6" />
+              </span>
+            </div>
+            <div className="mt-6 grid gap-3">
+              <div className="rounded-2xl bg-surface p-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-semibold text-text-muted">
+                    Menunggu
+                  </span>
+                  <span className="font-bold text-text-main">
+                    {data.totalMenungguVerifikasi}
+                  </span>
+                </div>
+              </div>
+              <div className="rounded-2xl bg-amber-50 p-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-semibold text-[#8a6507]">
+                    Perlu revisi
+                  </span>
+                  <span className="font-bold text-[#8a6507]">
+                    {data.totalPerluRevisi}
+                  </span>
+                </div>
+              </div>
+              <div className="rounded-2xl bg-surface p-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-semibold text-text-muted">
+                    Draft
+                  </span>
+                  <span className="font-bold text-text-main">
+                    {data.totalDraft}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <Link
+              href="/admin/pendaftar?status=menunggu_verifikasi"
+              className="mt-5 inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-border-soft bg-white text-sm font-semibold text-primary transition hover:bg-surface">
+              Buka antrean verifikasi
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </CardContent>
+        </Card>
       </section>
 
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {stats.map(([label, value]: DashboardStat) => (
-          <div
-            key={label}
-            className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
-            <p className="text-sm font-medium text-slate-500">{label}</p>
-            <p className="mt-3 text-3xl font-bold text-slate-950">{value}</p>
+      <Card className="overflow-hidden">
+        <CardHeader className="border-b border-border-soft pb-5 sm:pb-5">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <CardTitle>Pendaftar Terbaru</CardTitle>
+              <p className="mt-1 text-sm text-text-muted">
+                Entri terakhir yang tercatat di database.
+              </p>
+            </div>
+            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-secondary text-primary">
+              <ClipboardList className="h-5 w-5" />
+            </span>
           </div>
-        ))}
-      </section>
-
-      <section className="overflow-hidden rounded-md border border-slate-200 bg-white shadow-sm">
-        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
-          <div>
-            <h2 className="text-base font-bold text-slate-950">
-              Pendaftar Terbaru
-            </h2>
-            <p className="mt-1 text-sm text-slate-500">
-              Entri terakhir yang tercatat di database.
-            </p>
-          </div>
-          <UsersRound className="h-5 w-5 text-emerald-700" />
-        </div>
+        </CardHeader>
 
         {data.pendaftarTerbaru.length === 0 ? (
-          <div className="flex flex-col items-center justify-center px-5 py-12 text-center">
-            <ClipboardList className="h-10 w-10 text-slate-300" />
-            <p className="mt-3 text-sm font-semibold text-slate-700">
-              Belum ada pendaftar.
-            </p>
-          </div>
+          <EmptyState title="Belum ada pendaftar." />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-200 text-sm">
-              <thead className="bg-slate-50 text-left text-slate-500">
-                <tr>
-                  <th className="px-5 py-3 font-semibold">Nomor</th>
-                  <th className="px-5 py-3 font-semibold">Nama</th>
-                  <th className="px-5 py-3 font-semibold">Kontak</th>
-                  <th className="px-5 py-3 font-semibold">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {data.pendaftarTerbaru.map((item: RecentRegistration) => (
-                  <tr key={item.id.toString()}>
-                    <td className="px-5 py-4 font-semibold text-slate-900">
-                      {item.nomorPendaftaran}
-                    </td>
-                    <td className="px-5 py-4">
-                      <p className="font-semibold text-slate-900">
-                        {item.profilSantri?.namaLengkap ?? item.pengguna.nama}
-                      </p>
-                      <p className="mt-1 text-xs text-slate-500">
-                        {item.pengguna.email}
-                      </p>
-                    </td>
-                    <td className="px-5 py-4 text-slate-600">
-                      {item.pengguna.noHp ?? '-'}
-                    </td>
-                    <td className="px-5 py-4">
-                      <StatusBadge status={item.status} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nomor</TableHead>
+                    <TableHead>Nama</TableHead>
+                    <TableHead>Kontak</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Aksi</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {data.pendaftarTerbaru.map((item) => (
+                    <TableRow key={item.id.toString()}>
+                      <TableCell className="font-semibold text-text-main">
+                        {item.nomorPendaftaran}
+                      </TableCell>
+                      <TableCell>
+                        <p className="font-semibold text-text-main">
+                          {item.profilSantri?.namaLengkap ?? item.pengguna.nama}
+                        </p>
+                        <p className="mt-1 text-xs text-text-muted">
+                          {item.pengguna.email}
+                        </p>
+                      </TableCell>
+                      <TableCell className="text-text-muted">
+                        {item.pengguna.noHp ?? '-'}
+                      </TableCell>
+                      <TableCell>
+                        <StatusBadge status={item.status} />
+                      </TableCell>
+                      <TableCell>
+                        <Link
+                          href={`/admin/pendaftar/${item.id.toString()}`}
+                          className="inline-flex h-9 items-center justify-center rounded-xl border border-border-soft px-3 text-xs font-bold text-primary transition hover:bg-surface">
+                          Detail
+                        </Link>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
         )}
-      </section>
+      </Card>
     </div>
   );
 }

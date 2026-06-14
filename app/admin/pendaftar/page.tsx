@@ -1,10 +1,29 @@
 import Link from 'next/link';
+import { Eye, Filter } from 'lucide-react';
 import StatusBadge from '@/app/components/ui/StatusBadge';
 import { prisma } from '@/lib/prisma';
 import {
   registrationStatuses,
   type StatusPendaftaran,
 } from '@/lib/registration';
+import { buildPendaftaranAdminWhere } from '@/lib/repositories/pendaftaran';
+import { Button } from '@/app/components/ui/Button';
+import { Card, CardContent } from '@/app/components/ui/Card';
+import { DataTableToolbar } from '@/app/components/ui/DataTableToolbar';
+import { EmptyState } from '@/app/components/ui/EmptyState';
+import { PageHeader } from '@/app/components/ui/PageHeader';
+import { Pagination } from '@/app/components/ui/Pagination';
+import { SearchInput } from '@/app/components/ui/SearchInput';
+import { Select } from '@/app/components/ui/Select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/app/components/ui/Table';
+import { ExportButton } from './ExportButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -52,21 +71,7 @@ export default async function AdminPendaftarPage({
     ? (statusParam as StatusPendaftaran)
     : undefined;
 
-  const where = {
-    ...(status ? { status } : {}),
-    ...(search
-      ? {
-          OR: [
-            { nomorPendaftaran: { contains: search } },
-            { pengguna: { nama: { contains: search } } },
-            { pengguna: { email: { contains: search } } },
-            { pengguna: { noHp: { contains: search } } },
-            { profilSantri: { namaLengkap: { contains: search } } },
-            { profilSantri: { nik: { contains: search } } },
-          ],
-        }
-      : {}),
-  };
+  const where = buildPendaftaranAdminWhere({ search, status });
 
   const [registrations, total] = await Promise.all([
     prisma.pendaftaran.findMany({
@@ -83,116 +88,126 @@ export default async function AdminPendaftarPage({
     prisma.pendaftaran.count({ where }),
   ]);
   const pageCount = Math.max(1, Math.ceil(total / pageSize));
+  const queryBase = `search=${encodeURIComponent(search)}&status=${status ?? ''}`;
+  const exportParams = new URLSearchParams();
+
+  if (search) exportParams.set('search', search);
+  if (status) exportParams.set('status', status);
+
+  const exportQuery = exportParams.toString();
+  const exportHref = `/api/admin/export${exportQuery ? `?${exportQuery}` : ''}`;
 
   return (
     <section className="space-y-5">
-      <div className="rounded-md border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-        <p className="text-sm font-semibold uppercase tracking-wider text-emerald-700">
-          Data Pendaftar
-        </p>
-        <h1 className="mt-2 text-2xl font-bold text-slate-950">
-          Kelola Pendaftar
-        </h1>
-        <form className="mt-5 grid gap-3 md:grid-cols-[1fr_220px_auto]">
-          <input
-            name="search"
-            defaultValue={search}
-            placeholder="Cari nama, email, NIK, no HP..."
-            className="rounded-md border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-emerald-600 focus:ring-4 focus:ring-emerald-600/10"
-          />
-          <select
-            name="status"
-            defaultValue={status ?? ''}
-            className="rounded-md border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-emerald-600 focus:ring-4 focus:ring-emerald-600/10">
-            <option value="">Semua status</option>
-            <option value="draft">DRAFT</option>
-            <option value="menunggu_verifikasi">MENUNGGU VERIFIKASI</option>
-            <option value="perlu_revisi">PERLU REVISI</option>
-            <option value="diterima">DITERIMA</option>
-            <option value="ditolak">DITOLAK</option>
-          </select>
-          <button className="rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700">
-            Terapkan
-          </button>
-        </form>
-      </div>
+      <PageHeader
+        eyebrow="Data Pendaftar"
+        title="Kelola Pendaftar"
+        description="Cari data santri, filter berdasarkan status, lalu buka detail untuk verifikasi."
+        actions={<ExportButton href={exportHref} />}
+      />
 
-      <div className="overflow-hidden rounded-md border border-slate-200 bg-white shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-slate-200 text-sm">
-            <thead className="bg-slate-50 text-left text-slate-500">
-              <tr>
-                <th className="px-5 py-3 font-semibold">Nomor</th>
-                <th className="px-5 py-3 font-semibold">Nama Santri</th>
-                <th className="px-5 py-3 font-semibold">Kontak</th>
-                <th className="px-5 py-3 font-semibold">Asal Sekolah</th>
-                <th className="px-5 py-3 font-semibold">Status</th>
-                <th className="px-5 py-3 font-semibold">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {registrations.map((item: AdminRegistrationRow) => (
-                <tr key={item.id.toString()}>
-                  <td className="px-5 py-4 font-semibold text-slate-900">
-                    {item.nomorPendaftaran}
-                  </td>
-                  <td className="px-5 py-4">
-                    <p className="font-semibold text-slate-900">
-                      {item.profilSantri?.namaLengkap ?? item.pengguna.nama}
-                    </p>
-                    <p className="mt-1 text-xs text-slate-500">
-                      {item.profilSantri?.nik ?? '-'}
-                    </p>
-                  </td>
-                  <td className="px-5 py-4">
-                    <p>{item.pengguna.email}</p>
-                    <p className="mt-1 text-xs text-slate-500">
-                      {item.pengguna.noHp ?? '-'}
-                    </p>
-                  </td>
-                  <td className="px-5 py-4">
-                    {item.sekolahSebelumnya?.namaSekolah ?? '-'}
-                  </td>
-                  <td className="px-5 py-4">
-                    <StatusBadge status={item.status} />
-                  </td>
-                  <td className="px-5 py-4">
-                    <Link
-                      href={`/admin/pendaftar/${item.id.toString()}`}
-                      className="font-semibold text-emerald-700 hover:text-emerald-900">
-                      Detail
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      <DataTableToolbar
+        title="Pencarian dan filter"
+        description="Cari berdasarkan nama, email, NIK, nomor HP, atau nomor pendaftaran.">
+          <form className="grid gap-3 md:grid-cols-[1fr_220px_auto]">
+            <SearchInput
+              name="search"
+              defaultValue={search}
+              placeholder="Cari nama, email, NIK, no HP..."
+            />
+            <Select name="status" defaultValue={status ?? ''}>
+              <option value="">Semua status</option>
+              <option value="draft">DRAFT</option>
+              <option value="menunggu_verifikasi">MENUNGGU VERIFIKASI</option>
+              <option value="perlu_revisi">PERLU REVISI</option>
+              <option value="diterima">DITERIMA</option>
+              <option value="ditolak">DITOLAK</option>
+            </Select>
+            <Button type="submit" className="h-11">
+              <Filter className="h-4 w-4" />
+              Terapkan
+            </Button>
+          </form>
+      </DataTableToolbar>
 
-        {registrations.length === 0 && (
-          <p className="px-5 py-10 text-center text-sm text-slate-600">
-            Data pendaftar tidak ditemukan.
-          </p>
-        )}
-
-        <div className="flex items-center justify-between border-t border-slate-200 px-5 py-4 text-sm">
-          <span className="text-slate-600">
-            Halaman {page} dari {pageCount} · Total {total}
-          </span>
-          <div className="flex gap-2">
-            <Link
-              href={`/admin/pendaftar?search=${encodeURIComponent(search)}&status=${status ?? ''}&page=${Math.max(1, page - 1)}`}
-              className="rounded-md border border-slate-200 px-3 py-2 font-semibold text-slate-700 hover:bg-slate-50">
-              Sebelumnya
-            </Link>
-            <Link
-              href={`/admin/pendaftar?search=${encodeURIComponent(search)}&status=${status ?? ''}&page=${Math.min(pageCount, page + 1)}`}
-              className="rounded-md border border-slate-200 px-3 py-2 font-semibold text-slate-700 hover:bg-slate-50">
-              Berikutnya
-            </Link>
+      <Card className="overflow-hidden">
+        <div className="flex flex-col gap-2 border-b border-border-soft px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="font-bold text-text-main">Daftar Pendaftar</h2>
+            <p className="mt-1 text-sm text-text-muted">
+              Menampilkan {registrations.length} dari {total} data.
+            </p>
           </div>
         </div>
-      </div>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nomor</TableHead>
+                  <TableHead>Nama Santri</TableHead>
+                  <TableHead>Kontak</TableHead>
+                  <TableHead>Asal Sekolah</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Aksi</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {registrations.map((item) => (
+                  <TableRow key={item.id.toString()}>
+                    <TableCell className="font-semibold text-text-main">
+                      {item.nomorPendaftaran}
+                    </TableCell>
+                    <TableCell>
+                      <p className="font-semibold text-text-main">
+                        {item.profilSantri?.namaLengkap ?? item.pengguna.nama}
+                      </p>
+                      <p className="mt-1 text-xs text-text-muted">
+                        {item.profilSantri?.nik ?? '-'}
+                      </p>
+                    </TableCell>
+                    <TableCell>
+                      <p>{item.pengguna.email}</p>
+                      <p className="mt-1 text-xs text-text-muted">
+                        {item.pengguna.noHp ?? '-'}
+                      </p>
+                    </TableCell>
+                    <TableCell>
+                      {item.sekolahSebelumnya?.namaSekolah ?? '-'}
+                    </TableCell>
+                    <TableCell>
+                      <StatusBadge status={item.status} />
+                    </TableCell>
+                    <TableCell>
+                      <Link
+                        href={`/admin/pendaftar/${item.id.toString()}`}
+                        className="inline-flex h-9 items-center justify-center gap-2 rounded-xl border border-border-soft bg-white px-3 text-xs font-semibold text-primary transition hover:bg-surface">
+                        <Eye className="h-4 w-4" />
+                        Detail
+                      </Link>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+
+          {registrations.length === 0 && (
+            <EmptyState
+              title="Data pendaftar tidak ditemukan."
+              description="Coba ubah kata kunci pencarian atau filter status."
+            />
+          )}
+
+          <Pagination
+            page={page}
+            pageCount={pageCount}
+            total={total}
+            previousHref={`/admin/pendaftar?${queryBase}&page=${Math.max(1, page - 1)}`}
+            nextHref={`/admin/pendaftar?${queryBase}&page=${Math.min(pageCount, page + 1)}`}
+          />
+        </CardContent>
+      </Card>
     </section>
   );
 }

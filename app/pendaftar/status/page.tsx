@@ -1,8 +1,12 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { ArrowLeft, FileText } from 'lucide-react';
 import StatusBadge from '@/app/components/ui/StatusBadge';
 import { getAuthUser } from '@/lib/utils';
 import { prisma } from '@/lib/prisma';
+import { Alert } from '@/app/components/ui/Alert';
+import { Card, CardContent } from '@/app/components/ui/Card';
+import { PageHeader } from '@/app/components/ui/PageHeader';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,48 +23,53 @@ export default async function StatusPendaftaranPage() {
   });
 
   return (
-    <section className="rounded-md border border-slate-200 bg-white p-6 shadow-sm">
-      <p className="text-sm font-semibold uppercase tracking-wider text-emerald-700">
-        Status Pendaftaran
-      </p>
-      <h1 className="mt-2 text-2xl font-bold text-slate-950">
-        Informasi Status
-      </h1>
+    <section className="space-y-5">
+      <PageHeader
+        eyebrow="Status Pendaftaran"
+        title="Informasi Status"
+        description="Pantau tahap pendaftaran terbaru berdasarkan data yang sudah Anda kirim."
+      />
 
-      {registration ? (
-        <div className="mt-6 space-y-4">
-          <div>
-            <p className="text-sm text-slate-500">Nomor pendaftaran</p>
-            <p className="mt-1 font-bold text-slate-950">
-              {registration.nomorPendaftaran}
-            </p>
-          </div>
-          <div>
-            <p className="mb-2 text-sm text-slate-500">Status saat ini</p>
-            <StatusBadge status={registration.status} />
-          </div>
-          {registration.catatanAdmin && (
-            <div className="rounded-md border border-orange-200 bg-orange-50 p-4">
-              <p className="text-sm font-bold text-orange-800">
-                Catatan admin
-              </p>
-              <p className="mt-2 text-sm leading-6 text-orange-800">
-                {registration.catatanAdmin}
-              </p>
+      <Card>
+        <CardContent>
+          {registration ? (
+            <div className="space-y-5">
+              <div className="flex items-start gap-3">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-secondary text-primary">
+                  <FileText className="h-5 w-5" />
+                </span>
+                <div>
+                  <p className="text-sm text-text-muted">Nomor pendaftaran</p>
+                  <p className="mt-1 font-bold text-text-main">
+                    {registration.nomorPendaftaran}
+                  </p>
+                </div>
+              </div>
+              <div>
+                <p className="mb-2 text-sm text-text-muted">Status saat ini</p>
+                <StatusBadge status={registration.status} />
+              </div>
+              {registration.catatanAdmin && (
+                <Alert variant="warning">
+                  <p className="font-bold">Catatan admin</p>
+                  <p className="mt-1">{registration.catatanAdmin}</p>
+                </Alert>
+              )}
             </div>
+          ) : (
+            <p className="text-sm leading-6 text-text-muted">
+              Anda belum memiliki draft pendaftaran.
+            </p>
           )}
-        </div>
-      ) : (
-        <p className="mt-4 text-sm leading-6 text-slate-600">
-          Anda belum memiliki draft pendaftaran.
-        </p>
-      )}
 
-      <Link
-        href="/dashboard/peserta"
-        className="mt-6 inline-flex rounded-md border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50">
-        Kembali ke dashboard
-      </Link>
+          <Link
+            href="/dashboard/peserta"
+            className="mt-6 inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-border-soft bg-white px-4 text-sm font-semibold text-primary hover:bg-surface">
+            <ArrowLeft className="h-4 w-4" />
+            Kembali ke dashboard
+          </Link>
+        </CardContent>
+      </Card>
     </section>
   );
 }

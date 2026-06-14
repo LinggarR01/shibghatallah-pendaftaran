@@ -2,6 +2,11 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
+import { Alert } from '@/app/components/ui/Alert';
+import { Button } from '@/app/components/ui/Button';
+import { Label } from '@/app/components/ui/Label';
+import { Select } from '@/app/components/ui/Select';
+import { Textarea } from '@/app/components/ui/Textarea';
 
 type StatusUpdateFormProps = {
   registrationId: string;
@@ -54,48 +59,45 @@ export default function StatusUpdateForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {message && (
-        <div className="rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
+        <Alert variant="success">
           {message}
-        </div>
+        </Alert>
       )}
       {error && (
-        <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <Alert variant="destructive">
           {error}
-        </div>
+        </Alert>
       )}
-      <label className="block">
-        <span className="mb-2 block text-sm font-semibold text-slate-700">
+      <Label className="block">
+        <span className="mb-2 block">
           Status
         </span>
-        <select
+        <Select
           value={status}
-          onChange={(event) => setStatus(event.target.value)}
-          className="w-full rounded-md border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-emerald-600 focus:ring-4 focus:ring-emerald-600/10">
+          onChange={(event) => setStatus(event.target.value)}>
           <option value="draft">DRAFT</option>
           <option value="menunggu_verifikasi">MENUNGGU VERIFIKASI</option>
           <option value="perlu_revisi">PERLU REVISI</option>
           <option value="diterima">DITERIMA</option>
           <option value="ditolak">DITOLAK</option>
-        </select>
-      </label>
-      <label className="block">
-        <span className="mb-2 block text-sm font-semibold text-slate-700">
+        </Select>
+      </Label>
+      <Label className="block">
+        <span className="mb-2 block">
           Catatan admin
         </span>
-        <textarea
+        <Textarea
           value={catatanAdmin}
           onChange={(event) => setCatatanAdmin(event.target.value)}
           rows={5}
-          className="w-full resize-none rounded-md border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-emerald-600 focus:ring-4 focus:ring-emerald-600/10"
           placeholder="Wajib diisi jika status PERLU REVISI"
         />
-      </label>
-      <button
+      </Label>
+      <Button
         type="submit"
-        disabled={loading}
-        className="rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60">
+        disabled={loading}>
         {loading ? 'Menyimpan...' : 'Simpan Status'}
-      </button>
+      </Button>
     </form>
   );
 }

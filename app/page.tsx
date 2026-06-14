@@ -1,35 +1,56 @@
+import Image from 'next/image';
 import Link from 'next/link';
+import { LogIn, UserPlus } from 'lucide-react';
 import Navbar from './components/layout/Navbar';
+
+const HERO_IMAGE = '/pondok.webp';
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen bg-[#F8F5EC] text-slate-800">
-      {/* Navbar */}
+    <main className="min-h-screen bg-emerald-950 text-white">
       <Navbar />
 
-      {/* Hero Section */}
-      <section className="relative overflow-hidden">
-        <div className="relative mx-auto flex min-h-[calc(100vh-73px)] max-w-7xl items-center justify-center px-5 py-14 lg:px-8">
-          <div className="mx-auto max-w-3xl text-center">
-            <h2 className="text-4xl font-bold tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">
-              Pendaftaran Online Pondok Pesantren Shibgotalloh
-            </h2>
+      <section className="relative min-h-screen overflow-hidden">
+        <Image
+          src={HERO_IMAGE}
+          alt="Pondok Modern Shibghatallah"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover"
+        />
 
-            <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-slate-600 sm:text-lg">
-              Daftarkan calon santri dengan mudah, cepat, dan aman melalui
-              sistem pendaftaran online resmi Pondok Pesantren Shibgotalloh.
+        <div className="absolute inset-0 bg-emerald-950/65" />
+
+        <div className="relative z-10 mx-auto flex min-h-screen max-w-7xl items-center px-5 pb-16 pt-32 lg:px-8">
+          <div className="max-w-3xl">
+            <p className="text-sm font-bold uppercase tracking-[0.16em] text-emerald-100">
+              Pendaftaran Santri Online
             </p>
 
-            <div className="mt-8 flex flex-col justify-center gap-4 sm:flex-row">
+            <h1 className="mt-4 text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
+              Pendaftaran Santri Pondok Modern Shibghatallah
+            </h1>
+
+            <p className="mt-5 max-w-2xl text-base leading-8 text-emerald-50 sm:text-lg">
+              Calon santri dapat membuat akun dan mengisi formulir pendaftaran
+              secara online melalui sistem resmi Pondok Modern Shibghatallah.
+            </p>
+
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
                 href="/daftar-akun"
-                className="inline-flex items-center justify-center rounded-full bg-primary px-8 py-3 text-base font-semibold text-white shadow-lg shadow-emerald-900/20 transition hover:bg-emerald-800">
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-white px-6 text-sm font-semibold text-primary shadow-sm transition hover:bg-emerald-50"
+              >
                 Daftar
+                <UserPlus className="h-4 w-4" />
               </Link>
 
               <Link
                 href="/masuk-akun"
-                className="inline-flex items-center justify-center rounded-full border border-primary bg-white/70 px-8 py-3 text-base font-semibold text-primary transition hover:bg-emerald-50">
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-white/40 bg-white/10 px-6 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/20"
+              >
+                <LogIn className="h-4 w-4" />
                 Masuk
               </Link>
             </div>

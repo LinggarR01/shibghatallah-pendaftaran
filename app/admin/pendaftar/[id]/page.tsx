@@ -1,9 +1,14 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { ArrowLeft, Download, FileText } from 'lucide-react';
 import StatusBadge from '@/app/components/ui/StatusBadge';
 import { getDocumentLabel, type JenisDokumen } from '@/lib/documents';
 import { prisma } from '@/lib/prisma';
 import StatusUpdateForm from './StatusUpdateForm';
+import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/Card';
+import { EmptyState } from '@/app/components/ui/EmptyState';
+import { FormSection } from '@/app/components/ui/FormSection';
+import { PageHeader } from '@/app/components/ui/PageHeader';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,25 +24,12 @@ type RegistrationDocument = {
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div>
-      <p className="text-xs font-semibold uppercase text-slate-500">{label}</p>
-      <p className="mt-1 text-sm text-slate-900">{value || '-'}</p>
+    <div className="rounded-xl bg-surface px-4 py-3">
+      <p className="text-xs font-bold uppercase tracking-[0.14em] text-primary">
+        {label}
+      </p>
+      <p className="mt-1 text-sm leading-6 text-text-main">{value || '-'}</p>
     </div>
-  );
-}
-
-function Section({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
-      <h2 className="text-base font-bold text-slate-950">{title}</h2>
-      <div className="mt-4 grid gap-4 md:grid-cols-2">{children}</div>
-    </section>
   );
 }
 
@@ -45,8 +37,16 @@ export default async function AdminPendaftarDetailPage({
   params,
 }: AdminPendaftarDetailPageProps) {
   const { id } = await params;
+  let registrationId: bigint;
+
+  try {
+    registrationId = BigInt(id);
+  } catch {
+    notFound();
+  }
+
   const registration = await prisma.pendaftaran.findUnique({
-    where: { id: BigInt(id) },
+    where: { id: registrationId },
     include: {
       pengguna: {
         select: { nama: true, email: true, noHp: true, peran: true },
@@ -64,53 +64,39 @@ export default async function AdminPendaftarDetailPage({
 
   return (
     <div className="space-y-5">
-      <div className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
-        <Link
-          href="/admin/pendaftar"
-          className="text-sm font-semibold text-emerald-700 hover:text-emerald-900">
-          Kembali ke daftar
-        </Link>
-        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-sm text-slate-500">
-              {registration.nomorPendaftaran}
-            </p>
-            <h1 className="mt-1 text-2xl font-bold text-slate-950">
-              {registration.profilSantri?.namaLengkap ??
-                registration.pengguna.nama}
-            </h1>
-          </div>
-          <StatusBadge status={registration.status} />
-        </div>
-      </div>
+      <PageHeader
+        eyebrow={registration.nomorPendaftaran}
+        title={registration.profilSantri?.namaLengkap ?? registration.pengguna.nama}
+        description="Tinjau data pendaftaran, cek dokumen, lalu perbarui status verifikasi."
+        actions={
+          <>
+            <StatusBadge status={registration.status} />
+            <Link
+              href="/admin/pendaftar"
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-border-soft bg-white px-4 text-sm font-semibold text-primary transition hover:bg-surface">
+              <ArrowLeft className="h-4 w-4" />
+              Kembali
+            </Link>
+          </>
+        }
+      />
 
-      <Section title="Data Akun">
+      <FormSection title="Data Akun">
         <Row label="Nama akun" value={registration.pengguna.nama} />
         <Row label="Email" value={registration.pengguna.email} />
         <Row label="Nomor HP" value={registration.pengguna.noHp} />
         <Row label="Role" value={registration.pengguna.peran} />
-      </Section>
+      </FormSection>
 
-      <Section title="Data Santri">
-        <Row
-          label="Nama lengkap"
-          value={registration.profilSantri?.namaLengkap}
-        />
+      <FormSection title="Data Calon Santri">
+        <Row label="Nama lengkap" value={registration.profilSantri?.namaLengkap} />
         <Row label="NIK" value={registration.profilSantri?.nik} />
         <Row label="NISN" value={registration.profilSantri?.nisn} />
-        <Row
-          label="Jenis kelamin"
-          value={registration.profilSantri?.jenisKelamin}
-        />
-        <Row
-          label="Tempat lahir"
-          value={registration.profilSantri?.tempatLahir}
-        />
+        <Row label="Jenis kelamin" value={registration.profilSantri?.jenisKelamin} />
+        <Row label="Tempat lahir" value={registration.profilSantri?.tempatLahir} />
         <Row
           label="Tanggal lahir"
-          value={registration.profilSantri?.tanggalLahir?.toLocaleDateString(
-            'id-ID',
-          )}
+          value={registration.profilSantri?.tanggalLahir?.toLocaleDateString('id-ID')}
         />
         <Row label="Alamat" value={registration.profilSantri?.alamat} />
         <Row
@@ -124,78 +110,76 @@ export default async function AdminPendaftarDetailPage({
             .filter(Boolean)
             .join(', ')}
         />
-      </Section>
+      </FormSection>
 
-      <Section title="Data Orang Tua/Wali">
+      <FormSection title="Data Orang Tua/Wali">
         <Row label="Nama ayah" value={registration.profilOrangTua?.namaAyah} />
         <Row label="HP ayah" value={registration.profilOrangTua?.noHpAyah} />
         <Row label="Nama ibu" value={registration.profilOrangTua?.namaIbu} />
         <Row label="HP ibu" value={registration.profilOrangTua?.noHpIbu} />
         <Row label="Nama wali" value={registration.profilOrangTua?.namaWali} />
         <Row label="HP wali" value={registration.profilOrangTua?.noHpWali} />
-      </Section>
+      </FormSection>
 
-      <Section title="Pendidikan Sebelumnya">
-        <Row
-          label="Asal sekolah"
-          value={registration.sekolahSebelumnya?.namaSekolah}
-        />
+      <FormSection title="Data Pendidikan">
+        <Row label="Asal sekolah" value={registration.sekolahSebelumnya?.namaSekolah} />
         <Row label="NPSN" value={registration.sekolahSebelumnya?.npsn} />
-        <Row
-          label="Tahun lulus"
-          value={registration.sekolahSebelumnya?.tahunLulus}
-        />
-        <Row
-          label="Nomor ijazah"
-          value={registration.sekolahSebelumnya?.nomorIjazah}
-        />
-        <Row
-          label="Alamat sekolah"
-          value={registration.sekolahSebelumnya?.alamatSekolah}
-        />
-      </Section>
+        <Row label="Tahun lulus" value={registration.sekolahSebelumnya?.tahunLulus} />
+        <Row label="Nomor ijazah" value={registration.sekolahSebelumnya?.nomorIjazah} />
+        <Row label="Alamat sekolah" value={registration.sekolahSebelumnya?.alamatSekolah} />
+      </FormSection>
 
-      <section className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
-        <h2 className="text-base font-bold text-slate-950">Dokumen</h2>
-        {registration.dokumen.length === 0 ? (
-          <p className="mt-4 text-sm text-slate-600">Belum ada dokumen.</p>
-        ) : (
-          <div className="mt-4 grid gap-3">
-            {registration.dokumen.map((document: RegistrationDocument) => (
-              <div
-                key={document.id.toString()}
-                className="flex flex-col gap-3 rounded-md border border-slate-200 p-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="font-semibold text-slate-950">
-                    {getDocumentLabel(document.jenisDokumen)}
-                  </p>
-                  <p className="mt-1 text-sm text-slate-500">
-                    {document.namaFile}
-                  </p>
+      <Card>
+        <CardHeader>
+          <CardTitle>Dokumen</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {registration.dokumen.length === 0 ? (
+            <EmptyState title="Belum ada dokumen." />
+          ) : (
+            <div className="grid gap-3">
+              {registration.dokumen.map((document: RegistrationDocument) => (
+                <div
+                  key={document.id.toString()}
+                  className="flex flex-col gap-3 rounded-2xl border border-border-soft bg-surface p-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-start gap-3">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-primary">
+                      <FileText className="h-5 w-5" />
+                    </span>
+                    <div>
+                      <p className="font-semibold text-text-main">
+                        {getDocumentLabel(document.jenisDokumen)}
+                      </p>
+                      <p className="mt-1 text-sm text-text-muted">
+                        {document.namaFile}
+                      </p>
+                    </div>
+                  </div>
+                  <a
+                    href={`/api/documents/${document.id.toString()}?download=1`}
+                    className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-border-soft bg-white px-3 text-sm font-semibold text-primary hover:bg-secondary">
+                    <Download className="h-4 w-4" />
+                    Download
+                  </a>
                 </div>
-                <a
-                  href={`/api/documents/${document.id.toString()}?download=1`}
-                  className="rounded-md border border-slate-200 px-3 py-2 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50">
-                  Download
-                </a>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
-      <section className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
-        <h2 className="text-base font-bold text-slate-950">
-          Verifikasi Status
-        </h2>
-        <div className="mt-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>Verifikasi Pendaftar</CardTitle>
+        </CardHeader>
+        <CardContent>
           <StatusUpdateForm
             registrationId={registration.id.toString()}
             currentStatus={registration.status}
             currentNote={registration.catatanAdmin}
           />
-        </div>
-      </section>
+        </CardContent>
+      </Card>
     </div>
   );
 }

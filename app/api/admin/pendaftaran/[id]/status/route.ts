@@ -46,8 +46,19 @@ export async function PATCH(
     }
 
     const { id } = await params;
+    let registrationId: bigint;
+
+    try {
+      registrationId = BigInt(id);
+    } catch {
+      return jsonResponse(
+        { success: false, message: 'ID pendaftaran tidak valid' },
+        400,
+      );
+    }
+
     const registration = await prisma.pendaftaran.findUnique({
-      where: { id: BigInt(id) },
+      where: { id: registrationId },
     });
 
     if (!registration) {

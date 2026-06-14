@@ -30,7 +30,17 @@ export async function DELETE(
     }
 
     const { id } = await params;
-    const documentId = BigInt(id);
+    let documentId: bigint;
+
+    try {
+      documentId = BigInt(id);
+    } catch {
+      return jsonResponse(
+        { success: false, message: 'ID dokumen tidak valid' },
+        400,
+      );
+    }
+
     const document = await prisma.dokumenPendaftaran.findUnique({
       where: { id: documentId },
       include: { pendaftaran: true },

@@ -21,8 +21,19 @@ export async function GET(
   }
 
   const { id } = await params;
+  let documentId: bigint;
+
+  try {
+    documentId = BigInt(id);
+  } catch {
+    return Response.json(
+      { success: false, message: 'ID dokumen tidak valid' },
+      { status: 400 },
+    );
+  }
+
   const document = await prisma.dokumenPendaftaran.findUnique({
-    where: { id: BigInt(id) },
+    where: { id: documentId },
     include: {
       pendaftaran: {
         select: {

@@ -1,9 +1,15 @@
 'use client';
 
-import { Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react';
+import Image from 'next/image';
+import { Eye, EyeOff, Mail, Phone, User } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Alert } from '@/app/components/ui/Alert';
+import { Button } from '@/app/components/ui/Button';
+import { Card, CardContent } from '@/app/components/ui/Card';
+import { Input } from '@/app/components/ui/Input';
+import { Label } from '@/app/components/ui/Label';
 
 type RegisterResponse = {
   success: boolean;
@@ -129,225 +135,227 @@ export default function RegisterPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#F8F5EC] text-slate-800">
-      <section className="relative flex min-h-screen items-center justify-center overflow-hidden px-5 py-10">
-        <div className="relative w-full max-w-md">
-          <div className="rounded-4xl border border-white/70 bg-white/85 p-6 shadow-2xl shadow-emerald-950/10 backdrop-blur sm:p-8">
-            <div className="mb-7 text-center">
-              <h2 className="text-3xl font-bold tracking-tight text-slate-950">
-                Silahkan Daftar Akun!
-              </h2>
-              <p className="mt-3 text-sm leading-6 text-slate-600">
-                Buat akun terlebih dahulu untuk melanjutkan proses pendaftaran
-                santri.
-              </p>
-            </div>
-
-            {/* Error Message */}
-            {error && (
-              <div className="mb-5 flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4">
-                <AlertCircle className="h-5 w-5 flex-shrink-0 text-red-600 mt-0.5" />
-                <p className="text-sm text-red-700">{error}</p>
-              </div>
-            )}
-
-            {/* Success Message */}
-            {successMessage && (
-              <div className="mb-5 flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
-                <CheckCircle className="h-5 w-5 flex-shrink-0 text-emerald-600 mt-0.5" />
-                <p className="text-sm text-emerald-700">{successMessage}</p>
-              </div>
-            )}
-
-            <form className="space-y-5" onSubmit={handleSubmit}>
-              <div>
-                <label
-                  htmlFor="nama"
-                  className="mb-2 block text-sm font-semibold text-slate-700">
-                  Nama lengkap
-                </label>
-                <input
-                  id="nama"
-                  name="nama"
-                  type="text"
-                  required
-                  placeholder="Masukkan nama lengkap"
-                  value={nama}
-                  onChange={(e) => setNama(e.target.value)}
-                  disabled={loading}
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-600 focus:ring-4 focus:ring-primary/10 disabled:bg-slate-50 disabled:text-slate-400"
+    <main className="min-h-screen bg-surface text-text-main">
+      <section className="flex min-h-screen items-center justify-center px-5 py-10">
+        <div className="w-full max-w-xl">
+          <Card>
+            <CardContent className="p-6 sm:p-8">
+              <div className="mb-7 text-center">
+                <Image
+                  src="/logo.webp"
+                  alt="Logo Pondok Modern Shibghatallah"
+                  width={64}
+                  height={64}
+                  className="mx-auto h-16 w-16 object-contain"
+                  priority
                 />
+                <h2 className="mt-5 text-2xl font-bold tracking-tight text-text-main sm:text-3xl">
+                  Buat Akun Pendaftar
+                </h2>
+                <p className="mt-3 text-sm leading-6 text-text-muted">
+                  Akun ini digunakan untuk mengisi formulir dan memantau
+                  verifikasi pendaftaran santri.
+                </p>
               </div>
 
-              <div>
-                <label
-                  htmlFor="email"
-                  className="mb-2 block text-sm font-semibold text-slate-700">
-                  Email
-                </label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  required
-                  placeholder="nama@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={loading}
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-600 focus:ring-4 focus:ring-primary/10 disabled:bg-slate-50 disabled:text-slate-400"
-                />
-              </div>
+              {error && (
+                <Alert variant="destructive" className="mb-5">
+                  {error}
+                </Alert>
+              )}
 
-              <div>
-                <label
-                  htmlFor="whatsapp"
-                  className="mb-2 block text-sm font-semibold text-slate-700">
-                  Nomor WhatsApp
-                </label>
-                <input
-                  id="whatsapp"
-                  name="whatsapp"
-                  type="tel"
-                  required
-                  inputMode="tel"
-                  placeholder="Contoh: 081234567890"
-                  value={noHp}
-                  onChange={(e) => setNoHp(e.target.value)}
-                  disabled={loading}
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-600 focus:ring-4 focus:ring-primary/10 disabled:bg-slate-50 disabled:text-slate-400"
-                />
-              </div>
+              {successMessage && (
+                <Alert variant="success" className="mb-5">
+                  {successMessage}
+                </Alert>
+              )}
 
-              <div>
-                <label
-                  htmlFor="password"
-                  className="mb-2 block text-sm font-semibold text-slate-700">
-                  Password
-                </label>
+              <form className="space-y-5" onSubmit={handleSubmit}>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="sm:col-span-2">
+                    <Label htmlFor="nama" className="mb-2 block">
+                      Nama lengkap
+                    </Label>
+                    <div className="relative">
+                      <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
+                      <Input
+                        id="nama"
+                        name="nama"
+                        type="text"
+                        required
+                        placeholder="Masukkan nama lengkap"
+                        value={nama}
+                        onChange={(e) => setNama(e.target.value)}
+                        disabled={loading}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
 
-                <div className="relative">
-                  <input
+                  <div>
+                    <Label htmlFor="email" className="mb-2 block">
+                      Email
+                    </Label>
+                    <div className="relative">
+                      <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
+                      <Input
+                        id="email"
+                        name="email"
+                        type="email"
+                        required
+                        placeholder="nama@email.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        disabled={loading}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="whatsapp" className="mb-2 block">
+                      Nomor WhatsApp
+                    </Label>
+                    <div className="relative">
+                      <Phone className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
+                      <Input
+                        id="whatsapp"
+                        name="whatsapp"
+                        type="tel"
+                        required
+                        inputMode="tel"
+                        placeholder="081234567890"
+                        value={noHp}
+                        onChange={(e) => setNoHp(e.target.value)}
+                        disabled={loading}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <PasswordField
                     id="password"
-                    name="password"
-                    type={showPassword ? 'text' : 'password'}
-                    required
-                    minLength={8}
+                    label="Password"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    show={showPassword}
+                    setShow={setShowPassword}
+                    onChange={setPassword}
                     disabled={loading}
                     placeholder="Minimal 8 karakter"
-                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 pr-12 text-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-600 focus:ring-4 focus:ring-primary/10 disabled:bg-slate-50 disabled:text-slate-400"
                   />
-
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    disabled={loading}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 transition hover:text-primary disabled:opacity-50 disabled:cursor-not-allowed"
-                    aria-label={
-                      showPassword
-                        ? 'Sembunyikan password'
-                        : 'Tampilkan password'
-                    }>
-                    {showPassword ? (
-                      <EyeOff className="h-5 w-5" />
-                    ) : (
-                      <Eye className="h-5 w-5" />
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="confirmPassword"
-                  className="mb-2 block text-sm font-semibold text-slate-700">
-                  Konfirmasi password
-                </label>
-
-                <div className="relative">
-                  <input
+                  <PasswordField
                     id="confirmPassword"
-                    name="confirmPassword"
-                    type={showKonfirmasiPassword ? 'text' : 'password'}
-                    required
-                    minLength={8}
+                    label="Konfirmasi password"
                     value={konfirmasiPassword}
-                    onChange={(e) => setKonfirmasiPassword(e.target.value)}
+                    show={showKonfirmasiPassword}
+                    setShow={setShowKonfirmasiPassword}
+                    onChange={setKonfirmasiPassword}
                     disabled={loading}
                     placeholder="Ulangi password"
-                    className={`w-full rounded-2xl border bg-white px-4 py-3 pr-12 text-sm outline-none transition placeholder:text-slate-400 focus:ring-4 ${
-                      isPasswordNotMatch
-                        ? 'border-red-400 focus:border-red-500 focus:ring-red-500/10'
-                        : 'border-slate-200 focus:border-emerald-600 focus:ring-primary/10'
-                    } disabled:bg-slate-50 disabled:text-slate-400`}
+                    invalid={isPasswordNotMatch}
                   />
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setShowKonfirmasiPassword(!showKonfirmasiPassword)
-                    }
-                    disabled={loading}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 transition hover:text-primary disabled:opacity-50 disabled:cursor-not-allowed"
-                    aria-label={
-                      showKonfirmasiPassword
-                        ? 'Sembunyikan konfirmasi password'
-                        : 'Tampilkan konfirmasi password'
-                    }>
-                    {showKonfirmasiPassword ? (
-                      <EyeOff className="h-5 w-5" />
-                    ) : (
-                      <Eye className="h-5 w-5" />
-                    )}
-                  </button>
                 </div>
 
                 {isPasswordNotMatch && (
-                  <p className="mt-2 text-sm text-red-600">
+                  <p className="text-sm text-red-600">
                     Konfirmasi password harus sama dengan password.
                   </p>
                 )}
 
                 {isPasswordMatch && (
-                  <p className="mt-2 text-sm text-primary">
+                  <p className="text-sm font-semibold text-primary">
                     Password sudah sesuai.
                   </p>
                 )}
-              </div>
 
-              <label className="flex items-start gap-3 text-sm leading-6 text-slate-600">
-                <input
-                  type="checkbox"
-                  required
-                  disabled={loading}
-                  className="mt-1 h-4 w-4 rounded border-slate-300 text-primary focus:ring-emerald-600 disabled:opacity-50"
-                />
-                <span>
-                  Saya menyetujui syarat dan ketentuan pendaftaran santri Pondok
-                  Pesantren Shibgotalloh.
-                </span>
-              </label>
+                <label className="flex items-start gap-3 text-sm leading-6 text-text-muted">
+                  <input
+                    type="checkbox"
+                    required
+                    disabled={loading}
+                    className="mt-1 h-4 w-4 rounded border-border-soft text-primary focus:ring-primary disabled:opacity-50"
+                  />
+                  <span>
+                    Saya menyetujui syarat dan ketentuan pendaftaran santri
+                    Pondok Pesantren Shibgotalloh.
+                  </span>
+                </label>
 
-              <button
-                type="submit"
-                disabled={isPasswordNotMatch || loading}
-                className="w-full rounded-full bg-primary px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-900/20 transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none">
-                {loading ? 'Memproses...' : 'Daftar'}
-              </button>
-            </form>
+                <Button
+                  type="submit"
+                  disabled={isPasswordNotMatch || loading}
+                  className="w-full"
+                  size="lg">
+                  {loading ? 'Memproses...' : 'Daftar'}
+                </Button>
+              </form>
 
-            <p className="mt-6 text-center text-sm text-slate-600">
-              Sudah punya akun?{' '}
-              <Link
-                href="/masuk-akun"
-                className="font-semibold text-primary hover:text-emerald-800">
-                Masuk
-              </Link>
-            </p>
-          </div>
+              <p className="mt-6 text-center text-sm text-text-muted">
+                Sudah punya akun?{' '}
+                <Link
+                  href="/masuk-akun"
+                  className="font-semibold text-primary hover:text-primary-hover">
+                  Masuk
+                </Link>
+              </p>
+            </CardContent>
+          </Card>
         </div>
       </section>
     </main>
+  );
+}
+
+function PasswordField({
+  id,
+  label,
+  value,
+  show,
+  setShow,
+  onChange,
+  disabled,
+  placeholder,
+  invalid = false,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  show: boolean;
+  setShow: (value: boolean) => void;
+  onChange: (value: string) => void;
+  disabled: boolean;
+  placeholder: string;
+  invalid?: boolean;
+}) {
+  return (
+    <div>
+      <Label htmlFor={id} className="mb-2 block">
+        {label}
+      </Label>
+      <div className="relative">
+        <Input
+          id={id}
+          name={id}
+          type={show ? 'text' : 'password'}
+          required
+          minLength={8}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          disabled={disabled}
+          placeholder={placeholder}
+          className={`pr-11 ${invalid ? 'border-red-300 focus:border-red-500 focus:ring-red-500/10' : ''}`}
+        />
+        <button
+          type="button"
+          onClick={() => setShow(!show)}
+          disabled={disabled}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted transition hover:text-primary disabled:opacity-50"
+          aria-label={show ? 'Sembunyikan password' : 'Tampilkan password'}>
+          {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+        </button>
+      </div>
+    </div>
   );
 }
