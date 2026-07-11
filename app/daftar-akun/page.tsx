@@ -10,6 +10,7 @@ import { Button } from '@/app/components/ui/Button';
 import { Card, CardContent } from '@/app/components/ui/Card';
 import { Input } from '@/app/components/ui/Input';
 import { Label } from '@/app/components/ui/Label';
+import { toast } from '@/app/components/ui/Toast';
 
 type RegisterResponse = {
   success: boolean;
@@ -48,6 +49,11 @@ export default function RegisterPage() {
   const isPasswordNotMatch =
     konfirmasiPassword.length > 0 && password !== konfirmasiPassword;
 
+  function showError(message: string) {
+    setError(message);
+    toast.error(message);
+  }
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -57,37 +63,42 @@ export default function RegisterPage() {
 
     // Validasi manual
     if (!nama.trim()) {
-      setError('Nama lengkap wajib diisi');
+      showError('Mohon lengkapi data yang wajib diisi.');
       return;
     }
 
     if (!email.trim()) {
-      setError('Email wajib diisi');
+      showError('Mohon lengkapi data yang wajib diisi.');
+      return;
+    }
+
+    if (!email.includes('@')) {
+      showError('Format email tidak valid.');
       return;
     }
 
     if (!noHp.trim()) {
-      setError('Nomor WhatsApp wajib diisi');
+      showError('Mohon lengkapi data yang wajib diisi.');
       return;
     }
 
     if (!password) {
-      setError('Password wajib diisi');
+      showError('Mohon lengkapi data yang wajib diisi.');
       return;
     }
 
     if (!konfirmasiPassword) {
-      setError('Konfirmasi password wajib diisi');
+      showError('Mohon lengkapi data yang wajib diisi.');
       return;
     }
 
     if (password.length < 8) {
-      setError('Password minimal 8 karakter');
+      showError('Password minimal 8 karakter.');
       return;
     }
 
     if (password !== konfirmasiPassword) {
-      setError('Password dan konfirmasi password tidak cocok');
+      showError('Konfirmasi password tidak sama.');
       return;
     }
 
@@ -112,13 +123,19 @@ export default function RegisterPage() {
       const data: RegisterResponse = await response.json();
 
       if (!response.ok) {
-        setError(data.message || 'Registrasi gagal');
+        const message =
+          data.message?.toLowerCase().includes('email')
+            ? 'Email sudah terdaftar.'
+            : data.message || 'Terjadi kesalahan. Silakan coba lagi.';
+        showError(message);
         setLoading(false);
         return;
       }
 
       // Success
-      setSuccessMessage(data.message || 'Registrasi berhasil!');
+      const message = data.message || 'Akun berhasil dibuat.';
+      setSuccessMessage(message);
+      toast.success(message);
       setNama('');
       setEmail('');
       setNoHp('');
@@ -129,7 +146,7 @@ export default function RegisterPage() {
       router.refresh();
     } catch (err) {
       console.error('Register error:', err);
-      setError('Terjadi kesalahan pada server');
+      showError('Terjadi kesalahan. Silakan coba lagi.');
       setLoading(false);
     }
   };

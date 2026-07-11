@@ -49,3 +49,7 @@ next-env.d.ts
 .CLAUDE.md
 
 /prisma/seed.ts
+
+# File upload pengguna
+/storage/*
+!/storage/.gitkeep

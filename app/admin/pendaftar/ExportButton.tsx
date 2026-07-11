@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { FileDown } from 'lucide-react';
 import { Alert } from '@/app/components/ui/Alert';
 import { Button } from '@/app/components/ui/Button';
+import { toast } from '@/app/components/ui/Toast';
 
 type ExportButtonProps = {
   href: string;
@@ -32,7 +33,9 @@ export function ExportButton({ href }: ExportButtonProps) {
 
       if (!response.ok) {
         const payload = await response.json().catch(() => null);
-        setError(payload?.message ?? 'Export Excel gagal diproses');
+        const message = payload?.message ?? 'Export Excel gagal diproses.';
+        setError(message);
+        toast.error(message);
         return;
       }
 
@@ -46,8 +49,11 @@ export function ExportButton({ href }: ExportButtonProps) {
       anchor.click();
       anchor.remove();
       URL.revokeObjectURL(url);
+      toast.success('Export Excel berhasil diproses.');
     } catch {
-      setError('Export Excel gagal diproses. Silakan coba lagi.');
+      const message = 'Export Excel gagal diproses. Silakan coba lagi.';
+      setError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }

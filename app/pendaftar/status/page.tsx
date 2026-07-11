@@ -1,14 +1,42 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { ArrowLeft, FileText } from 'lucide-react';
+import { ArrowLeft, CalendarDays, FileText, Route } from 'lucide-react';
 import StatusBadge from '@/app/components/ui/StatusBadge';
 import { getAuthUser } from '@/lib/utils';
 import { prisma } from '@/lib/prisma';
 import { Alert } from '@/app/components/ui/Alert';
 import { Card, CardContent } from '@/app/components/ui/Card';
 import { PageHeader } from '@/app/components/ui/PageHeader';
+import {
+  getRegistrationStatusDescription,
+  type StatusPendaftaran,
+} from '@/lib/registration';
 
 export const dynamic = 'force-dynamic';
+
+function getNextStep(status: StatusPendaftaran) {
+  if (status === 'draft') {
+    return 'Lengkapi formulir dan dokumen, lalu kirim pendaftaran untuk diverifikasi.';
+  }
+
+  if (status === 'perlu_revisi') {
+    return 'Baca catatan admin, perbaiki data atau dokumen, lalu kirim kembali.';
+  }
+
+  if (
+    status === 'menunggu_verifikasi' ||
+    status === 'dikirim' ||
+    status === 'sedang_diperiksa'
+  ) {
+    return 'Tunggu proses pemeriksaan admin. Data dan dokumen tidak dapat diubah sementara.';
+  }
+
+  if (status === 'diterima') {
+    return 'Pendaftaran sudah diterima. Ikuti arahan lanjutan dari pihak pondok.';
+  }
+
+  return 'Pendaftaran belum dapat diterima. Hubungi admin jika membutuhkan informasi lebih lanjut.';
+}
 
 export default async function StatusPendaftaranPage() {
   const authUser = await getAuthUser();
@@ -48,10 +76,33 @@ export default async function StatusPendaftaranPage() {
               <div>
                 <p className="mb-2 text-sm text-text-muted">Status saat ini</p>
                 <StatusBadge status={registration.status} />
+                <p className="mt-3 text-sm leading-6 text-text-muted">
+                  {getRegistrationStatusDescription(registration.status)}
+                </p>
+              </div>
+              <div className="grid gap-3 md:grid-cols-2">
+                <div className="rounded-xl bg-surface p-4">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-text-main">
+                    <CalendarDays className="h-4 w-4 text-primary" />
+                    Terakhir diperbarui
+                  </div>
+                  <p className="mt-2 text-sm text-text-muted">
+                    {registration.diperbaruiPada.toLocaleString('id-ID')}
+                  </p>
+                </div>
+                <div className="rounded-xl bg-surface p-4">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-text-main">
+                    <Route className="h-4 w-4 text-primary" />
+                    Langkah selanjutnya
+                  </div>
+                  <p className="mt-2 text-sm leading-6 text-text-muted">
+                    {getNextStep(registration.status)}
+                  </p>
+                </div>
               </div>
               {registration.catatanAdmin && (
                 <Alert variant="warning">
-                  <p className="font-bold">Catatan admin</p>
+                  <p className="font-bold">Perlu Perbaikan</p>
                   <p className="mt-1">{registration.catatanAdmin}</p>
                 </Alert>
               )}

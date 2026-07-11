@@ -83,12 +83,30 @@ export function validateRegistrationForSubmit(input: RegistrationDraftInput) {
   if (!input.student.fullName) errors.push('Nama lengkap santri wajib diisi');
   if (!input.student.nik) errors.push('NIK santri wajib diisi');
   if (input.student.nik && !/^\d{16}$/.test(input.student.nik)) {
-    errors.push('NIK santri harus 16 digit');
+    errors.push('NIK harus terdiri dari 16 digit angka.');
+  }
+  if (input.student.nisn && !/^\d{10}$/.test(input.student.nisn)) {
+    errors.push('NISN harus terdiri dari 10 digit angka.');
   }
   if (!input.student.gender) errors.push('Jenis kelamin wajib dipilih');
   if (!input.student.birthPlace) errors.push('Tempat lahir wajib diisi');
   if (!input.student.birthDate) errors.push('Tanggal lahir wajib diisi');
+  if (
+    input.student.birthDate &&
+    new Date(input.student.birthDate) > new Date()
+  ) {
+    errors.push('Tanggal lahir tidak boleh di masa depan.');
+  }
   if (!input.student.address) errors.push('Alamat lengkap wajib diisi');
+  if (input.student.childOrder !== null && input.student.childOrder !== undefined && input.student.childOrder < 1) {
+    errors.push('Anak ke- minimal 1.');
+  }
+  if (input.student.siblingCount !== null && input.student.siblingCount !== undefined && input.student.siblingCount < 0) {
+    errors.push('Jumlah saudara minimal 0.');
+  }
+  if (input.student.postalCode && !/^\d{1,5}$/.test(input.student.postalCode)) {
+    errors.push('Kode pos maksimal 5 digit angka.');
+  }
 
   if (!input.parent.fatherName) errors.push('Nama ayah wajib diisi');
   if (!input.parent.motherName) errors.push('Nama ibu wajib diisi');
@@ -102,6 +120,12 @@ export function validateRegistrationForSubmit(input: RegistrationDraftInput) {
 
   if (!input.previousSchool.schoolName) {
     errors.push('Asal sekolah wajib diisi');
+  }
+  if (
+    input.previousSchool.graduationYear &&
+    !/^(19|20)\d{2}$/.test(input.previousSchool.graduationYear)
+  ) {
+    errors.push('Tahun lulus harus berupa tahun yang valid.');
   }
 
   return errors;

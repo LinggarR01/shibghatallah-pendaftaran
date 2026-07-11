@@ -13,6 +13,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import StatusBadge from '@/app/components/ui/StatusBadge';
+import { documentDefinitions } from '@/lib/documents';
 import { getAuthUser } from '@/lib/utils';
 import { prisma } from '@/lib/prisma';
 import {
@@ -34,7 +35,7 @@ async function getLatestRegistration(penggunaId: bigint) {
       profilSantri: true,
       profilOrangTua: true,
       sekolahSebelumnya: true,
-      dokumen: { select: { id: true } },
+      dokumen: { select: { id: true, jenisDokumen: true } },
     },
     orderBy: { dibuatPada: 'desc' },
   });
@@ -113,7 +114,16 @@ export default async function PesertaDashboardPage() {
       registration.profilOrangTua &&
       registration.sekolahSebelumnya,
   );
-  const documentsUploaded = (registration?.dokumen.length ?? 0) > 0;
+  const requiredDocumentTypes = documentDefinitions
+    .filter((definition) => definition.required)
+    .map((definition) => definition.type);
+  const uploadedDocumentTypes = new Set(
+    registration?.dokumen.map((document) => document.jenisDokumen) ?? [],
+  );
+  const missingRequiredDocuments = requiredDocumentTypes.filter(
+    (type) => !uploadedDocumentTypes.has(type),
+  );
+  const documentsUploaded = missingRequiredDocuments.length === 0;
   const status = registration?.status ?? null;
   const isWaiting =
     status === 'menunggu_verifikasi' ||
@@ -206,6 +216,14 @@ export default async function PesertaDashboardPage() {
           </div>
         </CardHeader>
         <CardContent>
+          {registration && missingRequiredDocuments.length > 0 && (
+            <Alert variant="warning" className="mb-4">
+              <h2 className="font-bold">Dokumen wajib belum lengkap</h2>
+              <p className="mt-1">
+                {missingRequiredDocuments.length} dokumen wajib masih perlu diunggah.
+              </p>
+            </Alert>
+          )}
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
             {steps.map((step, index) => {
               const Icon = step.icon;

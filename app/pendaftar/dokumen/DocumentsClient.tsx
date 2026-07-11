@@ -1,14 +1,16 @@
 'use client';
 
 import { useEffect, useMemo, useState, type ChangeEvent } from 'react';
-import { Download, FileUp, Trash2, Upload } from 'lucide-react';
 import { Alert } from '@/app/components/ui/Alert';
-import { Badge } from '@/app/components/ui/Badge';
-import { Button } from '@/app/components/ui/Button';
 import { Card, CardContent } from '@/app/components/ui/Card';
 import { ConfirmDialog } from '@/app/components/ui/ConfirmDialog';
+import { DocumentUploadCard } from '@/app/components/ui/DocumentUploadCard';
 import { PageHeader } from '@/app/components/ui/PageHeader';
 import { Skeleton } from '@/app/components/ui/Skeleton';
+import { toast } from '@/app/components/ui/Toast';
+
+const maxFileSize = 5 * 1024 * 1024;
+const allowedFileTypes = ['application/pdf', 'image/jpeg', 'image/png'];
 
 type DocumentDefinition = {
   type: string;
@@ -51,6 +53,11 @@ export default function DocumentsClient() {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
+  function showError(message: string) {
+    setError(message);
+    toast.error(message);
+  }
+
   const documentsByType = useMemo(() => {
     const map = new Map<string, UploadedDocument>();
     data?.documents.forEach((document: UploadedDocument) => {
@@ -67,7 +74,7 @@ export default function DocumentsClient() {
       });
       const payload = await response.json();
       if (!response.ok) {
-        setError(payload.message || 'Gagal mengambil dokumen');
+        showError(payload.message || 'Gagal mengambil dokumen');
         return;
       }
       setData(payload.data);
@@ -89,7 +96,7 @@ export default function DocumentsClient() {
         if (ignore) return;
 
         if (!response.ok) {
-          setError(payload.message || 'Gagal mengambil dokumen');
+          showError(payload.message || 'Gagal mengambil dokumen');
           return;
         }
         setData(payload.data);
@@ -111,16 +118,40 @@ export default function DocumentsClient() {
     type: string,
     event: ChangeEvent<HTMLInputElement>,
   ) {
+    const file = event.target.files?.[0] ?? null;
+
+    if (file && !allowedFileTypes.includes(file.type)) {
+      showError('File harus PDF, JPG, JPEG, atau PNG.');
+      event.target.value = '';
+      return;
+    }
+
+    if (file && file.size > maxFileSize) {
+      showError('Ukuran file maksimal 5 MB.');
+      event.target.value = '';
+      return;
+    }
+
     setSelectedFiles((current) => ({
       ...current,
-      [type]: event.target.files?.[0] ?? null,
+      [type]: file,
     }));
   }
 
   async function handleUpload(type: string) {
     const file = selectedFiles[type];
     if (!file) {
-      setError('Pilih file terlebih dahulu');
+      showError('Pilih file terlebih dahulu.');
+      return;
+    }
+
+    if (!allowedFileTypes.includes(file.type)) {
+      showError('File harus PDF, JPG, JPEG, atau PNG.');
+      return;
+    }
+
+    if (file.size > maxFileSize) {
+      showError('Ukuran file maksimal 5 MB.');
       return;
     }
 
@@ -141,12 +172,13 @@ export default function DocumentsClient() {
       const payload = await response.json();
 
       if (!response.ok) {
-        setError(payload.message || 'Upload dokumen gagal');
+        showError(payload.message || 'Gagal mengunggah dokumen.');
         return;
       }
 
       setSelectedFiles((current) => ({ ...current, [type]: null }));
-      setMessage('Dokumen berhasil diunggah');
+      setMessage('Dokumen berhasil diunggah.');
+      toast.success('Dokumen berhasil diunggah.');
       await loadDocuments();
     } finally {
       setBusyType(null);
@@ -166,11 +198,12 @@ export default function DocumentsClient() {
       const payload = await response.json();
 
       if (!response.ok) {
-        setError(payload.message || 'Hapus dokumen gagal');
+        showError(payload.message || 'Hapus dokumen gagal.');
         return;
       }
 
-      setMessage('Dokumen berhasil dihapus');
+      setMessage('Dokumen berhasil dihapus.');
+      toast.success('Dokumen berhasil dihapus.');
       await loadDocuments();
     } finally {
       setBusyType(null);
@@ -214,78 +247,44 @@ export default function DocumentsClient() {
           const document = documentsByType.get(definition.type);
           const isBusy =
             busyType === definition.type || busyType === document?.id?.toString();
+          const selectedFile = selectedFiles[definition.type];
 
           return (
-            <Card key={definition.type}>
-              <CardContent>
-                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-primary">
-                        <FileUp className="h-5 w-5" />
-                      </span>
-                      <h2 className="font-bold text-text-main">
-                        {definition.label}
-                      </h2>
-                      {definition.required && <Badge variant="danger">Wajib</Badge>}
-                    </div>
-                    <p className="mt-2 text-sm text-text-muted">
-                      {document ? 'Sudah upload' : 'Belum upload'}
-                    </p>
-                    {document && (
-                      <div className="mt-2 text-sm text-text-muted">
-                        <p>{document.namaFile}</p>
-                        <p>
-                          {formatFileSize(document.ukuranFile)} &middot;{' '}
-                          {new Date(document.diunggahPada).toLocaleDateString('id-ID')}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                    {document && (
-                      <a
-                        href={`${document.url}?download=1`}
-                        className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-border-soft bg-white px-3 text-sm font-semibold text-primary hover:bg-surface">
-                        <Download className="h-4 w-4" />
-                        Download
-                      </a>
-                    )}
-
-                    {data.canEdit && (
-                      <>
-                        <input
-                          type="file"
-                          accept="application/pdf,image/jpeg,image/png"
-                          onChange={(event) =>
-                            handleFileChange(definition.type, event)
-                          }
-                          className="max-w-xs text-sm text-text-muted file:mr-3 file:rounded-xl file:border-0 file:bg-surface file:px-3 file:py-2 file:text-sm file:font-semibold file:text-primary"
-                        />
-                        <Button
-                          type="button"
-                          onClick={() => handleUpload(definition.type)}
-                          disabled={isBusy}>
-                          <Upload className="h-4 w-4" />
-                          {document ? 'Ganti' : 'Upload'}
-                        </Button>
-                        {document && (
-                          <Button
-                            type="button"
-                            onClick={() => setDeleteTarget(document.id.toString())}
-                            disabled={isBusy}
-                            variant="destructive">
-                            <Trash2 className="h-4 w-4" />
-                            Hapus
-                          </Button>
-                        )}
-                      </>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <DocumentUploadCard
+              key={definition.type}
+              title={definition.label}
+              required={definition.required}
+              selectedFile={selectedFile}
+              existingFileName={document?.namaFile}
+              existingFileSize={formatFileSize(document?.ukuranFile ?? null)}
+              uploadedAt={
+                document
+                  ? new Date(document.diunggahPada).toLocaleDateString('id-ID')
+                  : undefined
+              }
+              statusLabel={
+                document
+                  ? document.statusVerifikasi.replaceAll('_', ' ')
+                  : 'Belum diunggah'
+              }
+              canEdit={Boolean(data.canEdit)}
+              busy={isBusy}
+              viewHref={document?.url}
+              downloadHref={document ? `${document.url}?download=1` : undefined}
+              onFileChange={(event) => handleFileChange(definition.type, event)}
+              onUpload={() => handleUpload(definition.type)}
+              onRemove={
+                document
+                  ? () => setDeleteTarget(document.id.toString())
+                  : selectedFile
+                    ? () =>
+                        setSelectedFiles((current) => ({
+                          ...current,
+                          [definition.type]: null,
+                        }))
+                    : undefined
+              }
+            />
           );
         })}
       </section>

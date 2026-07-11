@@ -38,6 +38,27 @@ export const loginSchema = z.object({
   }),
 });
 
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z
+      .string({ error: 'Password lama wajib diisi' })
+      .min(1, 'Password lama wajib diisi'),
+    newPassword: z
+      .string({ error: 'Password baru wajib diisi' })
+      .min(8, 'Password baru minimal 8 karakter.'),
+    confirmPassword: z
+      .string({ error: 'Konfirmasi password wajib diisi' })
+      .min(1, 'Konfirmasi password wajib diisi'),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: 'Konfirmasi password tidak sama.',
+    path: ['confirmPassword'],
+  })
+  .refine((data) => data.currentPassword !== data.newPassword, {
+    message: 'Password baru tidak boleh sama dengan password lama.',
+    path: ['newPassword'],
+  });
+
 export function getFirstValidationMessage(error: z.ZodError) {
   return error.issues[0]?.message ?? 'Data tidak valid';
 }

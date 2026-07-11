@@ -170,7 +170,7 @@ export async function POST(request: NextRequest) {
       return jsonResponse(
         {
           success: false,
-          message: 'Format file harus PDF, JPG, JPEG, atau PNG',
+          message: 'File harus PDF, JPG, JPEG, atau PNG.',
         },
         400,
       );
@@ -178,7 +178,7 @@ export async function POST(request: NextRequest) {
 
     if (file.size > MAX_DOCUMENT_SIZE) {
       return jsonResponse(
-        { success: false, message: 'Ukuran file maksimal 5 MB' },
+        { success: false, message: 'Ukuran file maksimal 5 MB.' },
         400,
       );
     }

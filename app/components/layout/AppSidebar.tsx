@@ -8,6 +8,7 @@ import {
   FileDown,
   FileText,
   Home,
+  KeyRound,
   LayoutDashboard,
   Sparkles,
   type LucideIcon,
@@ -29,12 +30,14 @@ const pendaftarNav: NavItem[] = [
   { href: '/pendaftar/formulir', label: 'Formulir', icon: FileText },
   { href: '/pendaftar/dokumen', label: 'Dokumen', icon: ClipboardList },
   { href: '/pendaftar/status', label: 'Status', icon: BarChart3 },
+  { href: '/pendaftar/ganti-password', label: 'Ganti Password', icon: KeyRound },
 ];
 
 const adminNav: NavItem[] = [
   { href: '/dashboard/admin', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/pendaftar', label: 'Data Pendaftar', icon: ClipboardList },
   { href: '/admin/export', label: 'Laporan Export', icon: FileDown },
+  { href: '/admin/ganti-password', label: 'Ganti Password', icon: KeyRound },
 ];
 
 type AppSidebarProps = {

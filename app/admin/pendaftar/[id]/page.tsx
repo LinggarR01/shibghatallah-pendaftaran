@@ -1,14 +1,27 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ArrowLeft, Download, FileText } from 'lucide-react';
+import { ArrowLeft, CalendarDays, FileCheck2, Mail, Phone, type LucideIcon } from 'lucide-react';
 import StatusBadge from '@/app/components/ui/StatusBadge';
-import { getDocumentLabel, type JenisDokumen } from '@/lib/documents';
+import {
+  documentDefinitions,
+  getDocumentLabel,
+  type JenisDokumen,
+} from '@/lib/documents';
 import { prisma } from '@/lib/prisma';
 import StatusUpdateForm from './StatusUpdateForm';
-import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/Card';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/app/components/ui/Card';
+import { Alert } from '@/app/components/ui/Alert';
+import { Badge } from '@/app/components/ui/Badge';
+import { DocumentUploadCard } from '@/app/components/ui/DocumentUploadCard';
 import { EmptyState } from '@/app/components/ui/EmptyState';
 import { FormSection } from '@/app/components/ui/FormSection';
 import { PageHeader } from '@/app/components/ui/PageHeader';
+import { getRegistrationStatusDescription } from '@/lib/registration';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,7 +33,20 @@ type RegistrationDocument = {
   id: bigint;
   jenisDokumen: JenisDokumen;
   namaFile: string;
+  tipeFile: string | null;
+  ukuranFile: bigint | null;
+  statusVerifikasi: string;
+  diunggahPada: Date;
 };
+
+function formatFileSize(value: bigint | null) {
+  if (!value) return '-';
+  return `${(Number(value) / 1024 / 1024).toFixed(2)} MB`;
+}
+
+function formatDate(value: Date | null | undefined) {
+  return value ? value.toLocaleDateString('id-ID') : '-';
+}
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
@@ -30,6 +56,30 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
       </p>
       <p className="mt-1 text-sm leading-6 text-text-main">{value || '-'}</p>
     </div>
+  );
+}
+
+function InfoCard({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: LucideIcon;
+  label: string;
+  value: string;
+}) {
+  return (
+    <Card>
+      <CardContent className="flex items-start gap-3">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary text-primary">
+          <Icon className="h-5 w-5" />
+        </span>
+        <div className="min-w-0">
+          <p className="text-sm text-text-muted">{label}</p>
+          <p className="mt-1 break-words font-bold text-text-main">{value}</p>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -51,6 +101,7 @@ export default async function AdminPendaftarDetailPage({
       pengguna: {
         select: { nama: true, email: true, noHp: true, peran: true },
       },
+      periode: true,
       profilSantri: true,
       profilOrangTua: true,
       sekolahSebelumnya: true,
@@ -62,12 +113,29 @@ export default async function AdminPendaftarDetailPage({
     notFound();
   }
 
+  const requiredDocumentTypes = documentDefinitions
+    .filter((definition) => definition.required)
+    .map((definition) => definition.type);
+  const uploadedDocumentTypes = new Set(
+    registration.dokumen.map((document) => document.jenisDokumen),
+  );
+  const missingRequiredDocuments = requiredDocumentTypes.filter(
+    (type) => !uploadedDocumentTypes.has(type),
+  );
+  const isDataComplete = Boolean(
+    registration.profilSantri &&
+      registration.profilOrangTua &&
+      registration.sekolahSebelumnya,
+  );
+
   return (
     <div className="space-y-5">
       <PageHeader
         eyebrow={registration.nomorPendaftaran}
-        title={registration.profilSantri?.namaLengkap ?? registration.pengguna.nama}
-        description="Tinjau data pendaftaran, cek dokumen, lalu perbarui status verifikasi."
+        title={
+          registration.profilSantri?.namaLengkap ?? registration.pengguna.nama
+        }
+        description={`${registration.periode.nama} - ${registration.periode.tahunAjaran}. ${getRegistrationStatusDescription(registration.status)}`}
         actions={
           <>
             <StatusBadge status={registration.status} />
@@ -81,22 +149,112 @@ export default async function AdminPendaftarDetailPage({
         }
       />
 
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <InfoCard
+          icon={Mail}
+          label="Email akun"
+          value={registration.pengguna.email}
+        />
+        <InfoCard
+          icon={Phone}
+          label="Nomor HP"
+          value={registration.pengguna.noHp ?? '-'}
+        />
+        <InfoCard
+          icon={CalendarDays}
+          label="Tanggal daftar"
+          value={formatDate(registration.dibuatPada)}
+        />
+        <InfoCard
+          icon={FileCheck2}
+          label="Kelengkapan"
+          value={
+            isDataComplete
+              ? missingRequiredDocuments.length === 0
+                ? 'Data dan dokumen lengkap'
+                : `${missingRequiredDocuments.length} dokumen wajib belum ada`
+              : 'Data wajib belum lengkap'
+          }
+        />
+      </div>
+
+      {registration.status === 'perlu_revisi' && registration.catatanAdmin && (
+        <Alert variant="warning">
+          <h2 className="font-bold">Perlu Perbaikan</h2>
+          <p className="mt-1">{registration.catatanAdmin}</p>
+        </Alert>
+      )}
+
+      <Card>
+        <CardContent>
+          <div className="flex flex-wrap gap-2">
+            {[
+              ['#ringkasan', 'Ringkasan'],
+              ['#santri', 'Data Santri'],
+              ['#orang-tua', 'Orang Tua/Wali'],
+              ['#pendidikan', 'Pendidikan'],
+              ['#dokumen', 'Dokumen'],
+              ['#verifikasi', 'Verifikasi'],
+            ].map(([href, label]) => (
+              <a
+                key={href}
+                href={href}
+                className="inline-flex h-9 items-center rounded-xl border border-border-soft bg-white px-3 text-sm font-semibold text-primary hover:bg-surface">
+                {label}
+              </a>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card id="ringkasan">
+        <CardHeader>
+          <CardTitle>Ringkasan Pemeriksaan</CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-3 md:grid-cols-2">
+          <Row label="Nomor pendaftaran" value={registration.nomorPendaftaran} />
+          <Row label="Periode" value={`${registration.periode.nama} - ${registration.periode.tahunAjaran}`} />
+          <Row label="Tanggal dikirim" value={formatDate(registration.dikirimPada)} />
+          <Row label="Tanggal diverifikasi" value={formatDate(registration.diverifikasiPada)} />
+          <Row label="Kelengkapan data" value={isDataComplete ? 'Data lengkap' : 'Data belum lengkap'} />
+          <Row
+            label="Kelengkapan dokumen"
+            value={
+              missingRequiredDocuments.length === 0
+                ? 'Dokumen wajib lengkap'
+                : `${missingRequiredDocuments.length} dokumen wajib belum diunggah`
+            }
+          />
+        </CardContent>
+      </Card>
+
       <FormSection title="Data Akun">
         <Row label="Nama akun" value={registration.pengguna.nama} />
         <Row label="Email" value={registration.pengguna.email} />
         <Row label="Nomor HP" value={registration.pengguna.noHp} />
-        <Row label="Role" value={registration.pengguna.peran} />
       </FormSection>
 
+      <div id="santri">
       <FormSection title="Data Calon Santri">
-        <Row label="Nama lengkap" value={registration.profilSantri?.namaLengkap} />
+        <Row
+          label="Nama lengkap"
+          value={registration.profilSantri?.namaLengkap}
+        />
         <Row label="NIK" value={registration.profilSantri?.nik} />
         <Row label="NISN" value={registration.profilSantri?.nisn} />
-        <Row label="Jenis kelamin" value={registration.profilSantri?.jenisKelamin} />
-        <Row label="Tempat lahir" value={registration.profilSantri?.tempatLahir} />
+        <Row
+          label="Jenis kelamin"
+          value={registration.profilSantri?.jenisKelamin}
+        />
+        <Row
+          label="Tempat lahir"
+          value={registration.profilSantri?.tempatLahir}
+        />
         <Row
           label="Tanggal lahir"
-          value={registration.profilSantri?.tanggalLahir?.toLocaleDateString('id-ID')}
+          value={registration.profilSantri?.tanggalLahir?.toLocaleDateString(
+            'id-ID',
+          )}
         />
         <Row label="Alamat" value={registration.profilSantri?.alamat} />
         <Row
@@ -111,7 +269,9 @@ export default async function AdminPendaftarDetailPage({
             .join(', ')}
         />
       </FormSection>
+      </div>
 
+      <div id="orang-tua">
       <FormSection title="Data Orang Tua/Wali">
         <Row label="Nama ayah" value={registration.profilOrangTua?.namaAyah} />
         <Row label="HP ayah" value={registration.profilOrangTua?.noHpAyah} />
@@ -120,18 +280,40 @@ export default async function AdminPendaftarDetailPage({
         <Row label="Nama wali" value={registration.profilOrangTua?.namaWali} />
         <Row label="HP wali" value={registration.profilOrangTua?.noHpWali} />
       </FormSection>
+      </div>
 
+      <div id="pendidikan">
       <FormSection title="Data Pendidikan">
-        <Row label="Asal sekolah" value={registration.sekolahSebelumnya?.namaSekolah} />
+        <Row
+          label="Asal sekolah"
+          value={registration.sekolahSebelumnya?.namaSekolah}
+        />
         <Row label="NPSN" value={registration.sekolahSebelumnya?.npsn} />
-        <Row label="Tahun lulus" value={registration.sekolahSebelumnya?.tahunLulus} />
-        <Row label="Nomor ijazah" value={registration.sekolahSebelumnya?.nomorIjazah} />
-        <Row label="Alamat sekolah" value={registration.sekolahSebelumnya?.alamatSekolah} />
+        <Row
+          label="Tahun lulus"
+          value={registration.sekolahSebelumnya?.tahunLulus}
+        />
+        <Row
+          label="Nomor ijazah"
+          value={registration.sekolahSebelumnya?.nomorIjazah}
+        />
+        <Row
+          label="Alamat sekolah"
+          value={registration.sekolahSebelumnya?.alamatSekolah}
+        />
       </FormSection>
+      </div>
 
-      <Card>
+      <Card id="dokumen">
         <CardHeader>
-          <CardTitle>Dokumen</CardTitle>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <CardTitle>Dokumen</CardTitle>
+            <Badge variant={missingRequiredDocuments.length === 0 ? 'success' : 'warning'}>
+              {missingRequiredDocuments.length === 0
+                ? 'Dokumen wajib lengkap'
+                : `${missingRequiredDocuments.length} belum diunggah`}
+            </Badge>
+          </div>
         </CardHeader>
         <CardContent>
           {registration.dokumen.length === 0 ? (
@@ -139,36 +321,24 @@ export default async function AdminPendaftarDetailPage({
           ) : (
             <div className="grid gap-3">
               {registration.dokumen.map((document: RegistrationDocument) => (
-                <div
+                <DocumentUploadCard
                   key={document.id.toString()}
-                  className="flex flex-col gap-3 rounded-2xl border border-border-soft bg-surface p-4 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex items-start gap-3">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-primary">
-                      <FileText className="h-5 w-5" />
-                    </span>
-                    <div>
-                      <p className="font-semibold text-text-main">
-                        {getDocumentLabel(document.jenisDokumen)}
-                      </p>
-                      <p className="mt-1 text-sm text-text-muted">
-                        {document.namaFile}
-                      </p>
-                    </div>
-                  </div>
-                  <a
-                    href={`/api/documents/${document.id.toString()}?download=1`}
-                    className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-border-soft bg-white px-3 text-sm font-semibold text-primary hover:bg-secondary">
-                    <Download className="h-4 w-4" />
-                    Download
-                  </a>
-                </div>
+                  title={getDocumentLabel(document.jenisDokumen)}
+                  existingFileName={document.namaFile}
+                  existingFileSize={formatFileSize(document.ukuranFile)}
+                  uploadedAt={formatDate(document.diunggahPada)}
+                  statusLabel={document.statusVerifikasi.replaceAll('_', ' ')}
+                  canEdit={false}
+                  viewHref={`/api/documents/${document.id.toString()}`}
+                  downloadHref={`/api/documents/${document.id.toString()}?download=1`}
+                />
               ))}
             </div>
           )}
         </CardContent>
       </Card>
 
-      <Card>
+      <Card id="verifikasi">
         <CardHeader>
           <CardTitle>Verifikasi Pendaftar</CardTitle>
         </CardHeader>

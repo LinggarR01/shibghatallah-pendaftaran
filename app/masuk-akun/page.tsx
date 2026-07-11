@@ -14,6 +14,7 @@ import { Button } from '@/app/components/ui/Button';
 import { Card, CardContent } from '@/app/components/ui/Card';
 import { Input } from '@/app/components/ui/Input';
 import { Label } from '@/app/components/ui/Label';
+import { toast } from '@/app/components/ui/Toast';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -32,7 +33,9 @@ export default function LoginPage() {
 
     // Validasi input
     if (!email.trim() || !password.trim()) {
-      setError('Email dan password tidak boleh kosong');
+      const message = 'Mohon lengkapi data yang wajib diisi.';
+      setError(message);
+      toast.warning(message);
       return;
     }
 
@@ -54,13 +57,17 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.message || 'Login gagal');
+        const message = data.message || 'Email atau password salah.';
+        setError(message);
+        toast.error(message);
         setLoading(false);
         return;
       }
 
       // Login berhasil
-      setSuccessMessage('Login berhasil! Mengalihkan...');
+      const message = 'Login berhasil. Mengalihkan...';
+      setSuccessMessage(message);
+      toast.success(message);
       setEmail('');
       setPassword('');
 
@@ -70,7 +77,9 @@ export default function LoginPage() {
       }, 1000);
     } catch (err) {
       console.error('Login error:', err);
-      setError('Terjadi kesalahan pada server');
+      const message = 'Terjadi kesalahan. Silakan coba lagi.';
+      setError(message);
+      toast.error(message);
       setLoading(false);
     }
   };
